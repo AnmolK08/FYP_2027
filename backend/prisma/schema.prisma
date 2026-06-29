@@ -1,0 +1,124 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  college       String?
+  department    String?
+  leetcodeUsername String? @map("leetcode_username")
+  avatar        String?
+  dailyGoal     Int      @default(3) @map("daily_goal")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  leetcodeStats   LeetcodeStats?
+  activities      Activity[]
+  chatMessages    ChatMessage[]
+  knowledgeDocs   KnowledgeDoc[]
+  mockInterviews  MockInterview[]
+
+  @@map("users")
+}
+
+model LeetcodeStats {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  leetcodeUsername String? @map("leetcode_username")
+  realName         String?  @map("real_name")
+  avatar           String?
+  totalSolved      Int      @default(0) @map("total_solved")
+  easy             Int      @default(0)
+  medium           Int      @default(0)
+  hard             Int      @default(0)
+  contestRating    Float    @default(0) @map("contest_rating")
+  contestsAttended Int      @default(0) @map("contests_attended")
+  globalRanking    Int      @default(0) @map("global_ranking")
+  topPercentage    Float    @default(0) @map("top_percentage")
+  tags             Json?
+  ratingHistory    Json?    @map("rating_history")
+  submissionCalendar Json?  @map("submission_calendar")
+  streak           Int      @default(0)
+  activeDays       Int      @default(0) @map("active_days")
+  universalScore   Float    @default(0) @map("universal_score")
+  lastSynced       DateTime? @map("last_synced")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("leetcode_stats")
+}
+
+model Activity {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  date          String
+  checkedIn     Boolean  @default(false) @map("checked_in")
+  synced        Boolean  @default(false)
+  solvedSnapshot Int    @default(0) @map("solved_snapshot")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("activity")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  sessionId String   @map("session_id")
+  role      String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sessionId])
+  @@map("chat_messages")
+}
+
+model KnowledgeDoc {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  filename  String
+  size      Int      @default(0)
+  chunks    Json?
+  nChunks   Int      @default(0) @map("n_chunks")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("knowledge_docs")
+}
+
+model MockInterview {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  type               String
+  problemTitle       String   @map("problem_title")
+  problemDescription String? @map("problem_description")
+  starterCode        String? @map("starter_code")
+  language           String   @default("javascript")
+  durationMinutes    Int      @default(30) @map("duration_minutes")
+  status             String   @default("pending")
+  code               String?
+  score              Int?
+  feedback           Json?
+  startedAt          DateTime? @map("started_at")
+  completedAt        DateTime? @map("completed_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mock_interviews")
+}
