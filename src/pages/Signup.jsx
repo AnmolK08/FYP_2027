@@ -14,7 +14,7 @@ export default function Signup() {
     password: '',
     college: '',
     department: '',
-    leetcode_username: '',
+    leetcodeUsername: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function Signup() {
         form.name,
         form.college,
         form.department,
-        form.leetcode_username
+        form.leetcodeUsername
       );
       navigate('/dashboard');
     } catch (err) {
@@ -128,12 +128,12 @@ export default function Signup() {
               />
             </div>
             <FormField
-              id="leetcode_username"
+              id="leetcodeUsername"
               label="LeetCode Handle (optional)"
               testid="signup-leetcode"
               mono
-              value={form.leetcode_username}
-              onChange={update('leetcode_username')}
+              value={form.leetcodeUsername}
+              onChange={update('leetcodeUsername')}
               placeholder="e.g. neetCode"
             />
 

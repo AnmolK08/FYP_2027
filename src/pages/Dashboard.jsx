@@ -48,7 +48,7 @@ export default function Dashboard() {
   const syncing = syncLeetCode.isPending;
 
   const handleSync = async () => {
-    if (!profile?.leetcode_username) {
+    if (!profile?.leetcodeUsername) {
       toast.error('Set your LeetCode username in your profile first');
       return;
     }
@@ -60,8 +60,23 @@ export default function Dashboard() {
     }
   };
 
+  const displayStats = useMemo(() => {
+    if (!stats) return DEMO_STATS;
+    return {
+      total_solved: stats.totalSolved ?? 0,
+      easy: stats.easy ?? 0,
+      medium: stats.medium ?? 0,
+      hard: stats.hard ?? 0,
+      contest_rating: stats.contestRating ?? 0,
+      contests_attended: stats.contestsAttended ?? 0,
+      global_ranking: stats.globalRanking ?? 0,
+      streak: stats.streak ?? 0,
+      universal_score: stats.universalScore ?? 0,
+    };
+  }, [stats]);
+
   const badges = useMemo(() => {
-    const s = stats || DEMO_STATS;
+    const s = displayStats;
     const b = [];
     if (s.total_solved >= 50) b.push({ name: 'First 50', icon: 'Trophy', tier: 'bronze' });
     if (s.total_solved >= 200) b.push({ name: 'Problem Hunter', icon: 'Target', tier: 'silver' });
@@ -76,10 +91,10 @@ export default function Dashboard() {
     if (s.streak >= 30) b.push({ name: '30-Day Grind', icon: 'Flame', tier: 'gold' });
     if (s.contests_attended >= 10) b.push({ name: 'Contest Veteran', icon: 'Swords', tier: 'silver' });
     return b;
-  }, [stats]);
+  }, [displayStats]);
 
   const heatmapData = useMemo(() => {
-    const cal = stats?.submission_calendar || {};
+    const cal = stats?.submissionCalendar || {};
     const cells = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
@@ -93,8 +108,6 @@ export default function Dashboard() {
     return cells;
   }, [stats]);
 
-  const displayStats = stats || DEMO_STATS;
-
   return (
     <ProtectedRoute>
       <main className="min-h-screen bg-background">
@@ -106,7 +119,7 @@ export default function Dashboard() {
                 {profile?.name?.split(' ')[0] || 'Student'}&apos;s dashboard
               </h1>
               <p className="text-muted-foreground mt-2 text-sm">
-                <span className="font-mono-display">{profile?.leetcode_username || 'no leetcode handle'}</span>
+                <span className="font-mono-display">{profile?.leetcodeUsername || 'no leetcode handle'}</span>
                 {profile?.college && <span> - {profile.college}</span>}
                 {profile?.department && <span> - {profile.department}</span>}
               </p>
@@ -259,9 +272,9 @@ export default function Dashboard() {
                   <div className="font-heading text-xl text-foreground">{profile?.name}</div>
                   <div className="text-sm text-muted-foreground">{user?.email}</div>
                 </div>
-                {profile?.leetcode_username && (
+                {profile?.leetcodeUsername && (
                   <a
-                    href={`https://leetcode.com/${profile.leetcode_username}/`}
+                    href={`https://leetcode.com/${profile.leetcodeUsername}/`}
                     target="_blank"
                     rel="noreferrer"
                     data-testid="open-leetcode"
@@ -321,7 +334,7 @@ function ProfileEditor({ profile, onSaved }) {
     name: profile?.name || '',
     college: profile?.college || '',
     department: profile?.department || '',
-    leetcode_username: profile?.leetcode_username || '',
+    leetcodeUsername: profile?.leetcodeUsername || '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -333,7 +346,7 @@ function ProfileEditor({ profile, onSaved }) {
         name: profile.name || '',
         college: profile.college || '',
         department: profile.department || '',
-        leetcode_username: profile.leetcode_username || '',
+        leetcodeUsername: profile.leetcodeUsername || '',
       });
     }
   }, [profile]);
@@ -372,7 +385,7 @@ function ProfileEditor({ profile, onSaved }) {
           <Field label="Name" v={form.name} onChange={set('name')} tid="edit-name" />
           <Field label="College" v={form.college} onChange={set('college')} tid="edit-college" />
           <Field label="Department" v={form.department} onChange={set('department')} tid="edit-department" />
-          <Field label="LeetCode Handle" v={form.leetcode_username} onChange={set('leetcode_username')} mono tid="edit-leetcode" />
+          <Field label="LeetCode Handle" v={form.leetcodeUsername} onChange={set('leetcodeUsername')} mono tid="edit-leetcode" />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

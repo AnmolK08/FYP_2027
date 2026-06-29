@@ -105,7 +105,7 @@ export default function Navbar() {
                     <div className="hidden md:flex flex-col items-start leading-tight">
                       <span className="text-sm font-medium">{profile?.name}</span>
                       <span className="text-xs text-muted-foreground font-mono-display">
-                        {profile?.leetcode_username || 'no handle'}
+                        {profile?.leetcodeUsername || 'no handle'}
                       </span>
                     </div>
                   </Button>
