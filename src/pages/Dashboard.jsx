@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import {
   RefreshCw, Settings2, Trophy, Award, Flame, Crown, Medal, Target, Mountain,
@@ -106,6 +106,15 @@ export default function Dashboard() {
       });
     }
     return cells;
+  }, [stats]);
+
+  const ratingHistory = useMemo(() => {
+    const history = stats?.ratingHistory || [];
+    return history.map(h => ({
+      title: h.title,
+      rating: h.rating,
+      date: h.date,
+    }));
   }, [stats]);
 
   return (

@@ -26,13 +26,13 @@ export async function apiCall(endpoint, options = {}) {
 }
 
 export const api = {
-  async signup(email, password, name, college, department, leetcodeUsername) {
-    const data = await apiCall('/auth/signup', {
+  async register(name, email, password, college, department, leetcode_handle) {
+    const data = await apiCall('/auth/register', {
       method: 'POST',
-      body: { email, password, name, college, department, leetcodeUsername },
+      body: { name, email, password, college, department, leetcode_handle },
     });
-    if (data.token) {
-      localStorage.setItem('token', data.token);
+    if (data.token || data.access_token) {
+      localStorage.setItem('token', data.token || data.access_token);
     }
     return data;
   },
@@ -49,6 +49,7 @@ export const api = {
   },
 
   async logout() {
+    await apiCall('/auth/logout', { method: 'POST' });
     localStorage.removeItem('token');
   },
 
@@ -57,8 +58,8 @@ export const api = {
   },
 
   async updateProfile(updates) {
-    return apiCall('/auth/profile', {
-      method: 'PUT',
+    return apiCall('/users/me', {
+      method: 'PATCH',
       body: updates,
     });
   },
@@ -79,8 +80,8 @@ export const api = {
     return apiCall('/mentor/sessions');
   },
 
-  async getChatMessages(sessionId) {
-    return apiCall(`/mentor/messages/${sessionId}`);
+  async getChatHistory(sessionId) {
+    return apiCall(`/mentor/history/${sessionId}`);
   },
 
   async sendChatMessage(message, sessionId) {
@@ -95,29 +96,40 @@ export const api = {
   },
 
   async getKbDocs() {
-    return apiCall('/knowledge');
+    return apiCall('/knowledge/docs');
   },
 
-  async uploadKbDoc(title, content, filename, size) {
-    return apiCall('/knowledge/upload', {
+  async uploadKbDoc(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/knowledge/upload`, {
       method: 'POST',
-      body: { title, content, filename, size },
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
     });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Upload failed');
+    }
+    return data;
   },
 
   async deleteKbDoc(id) {
-    return apiCall(`/knowledge/${id}`, { method: 'DELETE' });
+    return apiCall(`/knowledge/docs/${id}`, { method: 'DELETE' });
   },
 
-  async askKb(question, docIds) {
+  async askKb(question) {
     return apiCall('/knowledge/ask', {
       method: 'POST',
-      body: { question, docIds },
+      body: { question },
     });
   },
 
-  async getActivity() {
-    return apiCall('/activity');
+  async getStreakSummary() {
+    return apiCall('/streak/summary');
   },
 
   async checkIn() {
@@ -140,6 +152,117 @@ export const api = {
       method: 'PUT',
       body: updates,
     });
+  },
+
+  // DSA Bank (M4)
+  async getProblems(difficulty, tag, q) {
+    const params = new URLSearchParams();
+    if (difficulty) params.set('difficulty', difficulty);
+    if (tag) params.set('tag', tag);
+    if (q) params.set('q', q);
+    return apiCall(`/problems?${params}`);
+  },
+
+  // Resume Builder (M6)
+  async scoreResume(text, targetRole) {
+    return apiCall('/resume/score', {
+      method: 'POST',
+      body: { text, target_role: targetRole },
+    });
+  },
+
+  async getResumeRoles() {
+    return apiCall('/resume/roles');
+  },
+
+  // System Design (M7)
+  async getSdTopics() {
+    return apiCall('/sd/topics');
+  },
+
+  // Contest Predictor (M9)
+  async predictContest(currentRating, predictedRank, participants) {
+    return apiCall('/predict/contest', {
+      method: 'POST',
+      body: {
+        current_rating: currentRating,
+        predicted_rank: predictedRank,
+        participants: participants || 20000,
+      },
+    });
+  },
+
+  // Flashcards (M11)
+  async getFlashcards() {
+    return apiCall('/quiz/flashcards');
+  },
+
+  // Learning Tracks (M12)
+  async getTracks() {
+    return apiCall('/tracks');
+  },
+
+  // Activity (streaks)
+  async getActivity() {
+    return apiCall('/activity');
+  },
+
+  // Health check
+  async health() {
+    return apiCall('/');
+  },
+
+  // Streaming chat for mentor
+  async streamChat(message, sessionId, onChunk, onDone, onError) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/mentor/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ message, session_id: sessionId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Chat failed');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              if (onDone) onDone();
+              return;
+            }
+            if (data.startsWith('[ERROR]')) {
+              if (onError) onError(data.slice(7));
+              return;
+            }
+            if (onChunk) onChunk(data);
+          } else if (line.startsWith('event: meta')) {
+            // Metadata event, can extract session_id if needed
+          }
+        }
+      }
+    } catch (err) {
+      if (onError) onError(err.message);
+      throw err;
+    }
   },
 };
 

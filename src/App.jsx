@@ -9,6 +9,12 @@ import Mentor from './pages/Mentor';
 import Knowledge from './pages/Knowledge';
 import Streaks from './pages/Streaks';
 import Interview from './pages/Interview';
+import FlashCards from './pages/FlashCards';
+import Problems from './pages/Problems';
+import Predictor from './pages/Predictor';
+import Resume from './pages/Resume';
+import SystemDesign from './pages/SystemDesign';
+import Tracks from './pages/Tracks';
 
 export default function App() {
   return (
@@ -23,6 +29,12 @@ export default function App() {
         <Route path="/knowledge" element={<Knowledge />} />
         <Route path="/streaks" element={<Streaks />} />
         <Route path="/interview" element={<Interview />} />
+        <Route path="/flashcards" element={<FlashCards />} />
+        <Route path="/problems" element={<Problems />} />
+        <Route path="/predictor" element={<Predictor />} />
+        <Route path="/resume" element={<Resume />} />
+        <Route path="/system-design" element={<SystemDesign />} />
+        <Route path="/tracks" element={<Tracks />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster richColors position="top-right" />
