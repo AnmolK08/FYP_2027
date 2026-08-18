@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;

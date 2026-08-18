@@ -1,6 +1,11 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "client"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,23 +13,22 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password      String
-  name          String
-  college       String?
-  department    String?
-  leetcodeUsername String? @map("leetcode_username")
-  avatar        String?
-  dailyGoal     Int      @default(3) @map("daily_goal")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-
-  leetcodeStats   LeetcodeStats?
-  activities      Activity[]
-  chatMessages    ChatMessage[]
-  knowledgeDocs   KnowledgeDoc[]
-  mockInterviews  MockInterview[]
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  password           String
+  name               String
+  college            String?
+  department         String?
+  leetcodeUsername   String?  @map("leetcode_username")
+  avatar             String?
+  dailyGoal          Int      @default(3) @map("daily_goal")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  leetcodeStats      LeetcodeStats?
+  activities         Activity[]
+  chatMessages       ChatMessage[]
+  knowledgeDocs      KnowledgeDoc[]
+  mockInterviews     MockInterview[]
 
   @@map("users")
 }
@@ -53,7 +57,6 @@ model LeetcodeStats {
   createdAt        DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@map("leetcode_stats")
 }
 
@@ -67,7 +70,6 @@ model Activity {
   createdAt     DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([userId, date])
   @@map("activity")
 }
@@ -81,7 +83,6 @@ model ChatMessage {
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId, sessionId])
   @@map("chat_messages")
 }
@@ -97,7 +98,6 @@ model KnowledgeDoc {
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@map("knowledge_docs")
 }
 
@@ -116,9 +116,9 @@ model MockInterview {
   feedback           Json?
   startedAt          DateTime? @map("started_at")
   completedAt        DateTime? @map("completed_at")
-  createdAt         DateTime @default(now()) @map("created_at")
+  createdAt          DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@map("mock_interviews")
 }
+

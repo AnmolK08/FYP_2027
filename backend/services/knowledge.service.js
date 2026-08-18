@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 import { Pinecone } from "@pinecone-database/pinecone";
 import { PineconeStore } from "@langchain/pinecone";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
@@ -33,7 +33,7 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
     try {
       const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
       const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
-      
+
       const embeddings = new GoogleGenerativeAIEmbeddings({
         model: "text-embedding-004",
         apiKey: process.env.GEMINI_API_KEY,
@@ -78,7 +78,7 @@ export const askQuestion = async (userId, question, docIds) => {
     });
 
     const vectorStore = new PineconeStore(embeddings, { pineconeIndex });
-    
+
     const filter = { userId };
     if (docIds?.length) {
       filter.docId = { $in: docIds };

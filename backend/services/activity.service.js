@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 
 export const getUserActivity = async (userId) => {
   return await prisma.activity.findMany({

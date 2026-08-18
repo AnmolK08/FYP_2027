@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 
 /**
  * Service responsibilities:
@@ -50,7 +50,7 @@ export const updateUser = async (id, updateData) => {
 
 export const deleteUser = async (id) => {
   await findUserById(id); // Will throw if not found
-  
+
   return await prisma.user.delete({
     where: { id },
   });

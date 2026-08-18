@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from '../config/prisma.js';
 
 export const syncLeetcodeStats = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -173,7 +173,7 @@ export const getLeaderboard = async (userId, scope = 'global', sort = 'universal
   });
 
   const sortKey = sort === 'contest_rating' ? 'contest_rating' : sort === 'total_solved' ? 'total_solved' : sort === 'hard' ? 'hard' : 'universal_score';
-  
+
   leaderboard.sort((a, b) => b[sortKey] - a[sortKey]);
 
   leaderboard.forEach((item, index) => {

@@ -18,20 +18,22 @@
     "@neondatabase/serverless": "^1.1.0",
     "@pinecone-database/pinecone": "^5.1.2",
     "@prisma/adapter-neon": "^7.9.1",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.5.9",
     "morgan": "^1.10.0",
+    "pg": "^8.23.0",
     "uuid": "^14.0.1",
     "ws": "^8.21.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "prisma": "^6.12.0"
+    "prisma": "^7.9.1"
   }
 }
