@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Clean, scalable, production-ready Node.js + Express backend",
-  "main": "src/index.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate"
   },
@@ -32,6 +32,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.4",
-    "prisma": "^7.9.1"
+    "prisma": "^6.12.0"
   }
 }

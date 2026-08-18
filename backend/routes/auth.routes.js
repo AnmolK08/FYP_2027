@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth.middleware.js';
 const router = Router();
 
 // Public routes
-router.post('/signup', authController.signup);
+router.post('/register', authController.signup);
 router.post('/login', authController.login);
 
 // Protected routes

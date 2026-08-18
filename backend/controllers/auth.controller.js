@@ -10,7 +10,7 @@ export const signup = async (req, res, next) => {
     // Note: To perfectly replicate old API, token generation should happen in service or controller.
     // Given the architectural rules, token could be returned by service.
     // For now, I'll generate it here or in service.
-    // Let's assume authService returns { user, token }
+    // Let's assume authService returns { user, token 
     res.json(result);
   } catch (error) {
     if (error.statusCode) {
