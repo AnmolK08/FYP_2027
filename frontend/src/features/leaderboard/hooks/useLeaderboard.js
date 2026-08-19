@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { leaderboardApi } from '../leaderboard.api';
-import { useAuth } from '../../../contexts/AuthContext';
+import { api } from '../../../services/api';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 export function useLeaderboard(scope = 'global') {
   const { profile } = useAuth();
@@ -8,7 +8,7 @@ export function useLeaderboard(scope = 'global') {
   return useQuery({
     queryKey: ['leaderboard', scope, profile?.college, profile?.department],
     queryFn: async () => {
-      const data = await leaderboardApi.getLeaderboard(scope, 'universal_score');
+      const data = await api.getLeaderboard(scope, 'universal_score');
       return data.leaderboard;
     },
     enabled: !!profile,

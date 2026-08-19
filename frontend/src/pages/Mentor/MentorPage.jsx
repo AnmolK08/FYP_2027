@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 import { useChatSessions, useChatMessages, useSendChatMessage, useGenerateWeaknessPlan } from '../../features/mentor/hooks/useMentor';
 import { Send, Sparkles, History, Plus, Loader2 } from 'lucide-react';
 

@@ -1,12 +1,12 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { knowledgeApi } from '../knowledge.api';
+import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
 
 export function useKbDocs() {
   return useQuery({
     queryKey: ['kbDocs'],
     queryFn: async () => {
-      const data = await knowledgeApi.getDocs();
+      const data = await api.getDocs();
       return data.docs;
     },
   });
@@ -14,7 +14,7 @@ export function useKbDocs() {
 
 export function useUploadKbDoc() {
   return useMutation({
-    mutationFn: (file) => knowledgeApi.uploadDoc(file),
+    mutationFn: (file) => api.uploadDoc(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kbDocs'] });
     },
@@ -23,7 +23,7 @@ export function useUploadKbDoc() {
 
 export function useDeleteKbDoc() {
   return useMutation({
-    mutationFn: (id) => knowledgeApi.deleteDoc(id),
+    mutationFn: (id) => api.deleteDoc(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kbDocs'] });
     },
@@ -32,6 +32,6 @@ export function useDeleteKbDoc() {
 
 export function useAskKb() {
   return useMutation({
-    mutationFn: (question) => knowledgeApi.ask(question),
+    mutationFn: (question) => api.ask(question),
   });
 }

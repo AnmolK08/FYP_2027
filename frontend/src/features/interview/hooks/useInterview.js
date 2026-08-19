@@ -1,12 +1,12 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { interviewApi } from '../interview.api';
+import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
 
 export function useMockInterviews() {
   return useQuery({
     queryKey: ['interviews'],
     queryFn: async () => {
-      const data = await interviewApi.getInterviews();
+      const data = await api.getInterviews();
       return data.interviews;
     },
   });
@@ -14,7 +14,7 @@ export function useMockInterviews() {
 
 export function useCreateMockInterview() {
   return useMutation({
-    mutationFn: (interview) => interviewApi.createInterview(interview),
+    mutationFn: (interview) => api.createInterview(interview),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interviews'] });
     },
@@ -23,7 +23,7 @@ export function useCreateMockInterview() {
 
 export function useUpdateMockInterview() {
   return useMutation({
-    mutationFn: ({ id, updates }) => interviewApi.updateInterview(id, updates),
+    mutationFn: ({ id, updates }) => api.updateInterview(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interviews'] });
     },

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useLeetCodeStats, useSyncLeetCode } from '../../features/profile/hooks/useUserStats';
 import { Button } from '@/components/ui/button';

@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { profileApi } from '../profile.api';
-import { useAuth } from '../../../contexts/AuthContext';
+import { api } from '../../../services/api';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { queryClient } from '../../../services/queryClient';
 
 export function useLeetCodeStats() {
@@ -9,7 +9,7 @@ export function useLeetCodeStats() {
     queryKey: ['leetcode-stats', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const data = await profileApi.getLeetCodeStats();
+      const data = await api.getLeetCodeStats();
       return data.stats;
     },
     enabled: !!user,
@@ -22,7 +22,7 @@ export function useSyncLeetCode() {
   return useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      const data = await profileApi.syncLeetCode();
+      const data = await api.syncLeetCode();
       return data.stats;
     },
     onSuccess: () => {
@@ -39,7 +39,7 @@ export function useActivity() {
     queryKey: ['activity', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const data = await profileApi.getActivity();
+      const data = await api.getActivity();
       return data.activity;
     },
     enabled: !!user,
@@ -52,7 +52,7 @@ export function useCheckIn() {
   return useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
-      await profileApi.checkIn();
+      await api.checkIn();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activity'] });
@@ -66,7 +66,7 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (updates) => {
       if (!user) throw new Error('Not authenticated');
-      const data = await profileApi.updateProfile(updates);
+      const data = await api.updateProfile(updates);
       return data.user;
     },
     onSuccess: () => {

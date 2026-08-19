@@ -1,4 +1,11 @@
 import * as authService from '../services/auth.service.js';
+import jwt from 'jsonwebtoken';
+
+const generateToken = (user) => {
+  return jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'fallback_secret', {
+    expiresIn: '7d',
+  });
+};
 
 export const signup = async (req, res, next) => {
   try {
@@ -6,12 +13,9 @@ export const signup = async (req, res, next) => {
     if (!userData.email || !userData.password || !userData.name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
-    const result = await authService.registerUser(userData);
-    // Note: To perfectly replicate old API, token generation should happen in service or controller.
-    // Given the architectural rules, token could be returned by service.
-    // For now, I'll generate it here or in service.
-    // Let's assume authService returns { user, token 
-    res.json(result);
+    const user = await authService.registerUser(userData);
+    const token = generateToken(user);
+    res.json({ user, token });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ error: error.message });
@@ -26,8 +30,9 @@ export const login = async (req, res, next) => {
     if (!credentials.email || !credentials.password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
-    const result = await authService.loginUser(credentials);
-    res.json(result);
+    const user = await authService.loginUser(credentials);
+    const token = generateToken(user);
+    res.json({ user, token });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ error: error.message });

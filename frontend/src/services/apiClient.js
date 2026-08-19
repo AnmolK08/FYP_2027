@@ -22,7 +22,15 @@ export async function apiClient(endpoint, options = {}) {
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  
+
+  // Handle expired / invalid sessions globally
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    // Throw so the calling code's .catch / onError still fires cleanly
+    throw new Error('Session expired. Redirecting to login…');
+  }
+
   let data;
   try {
     data = await response.json();
@@ -33,7 +41,7 @@ export async function apiClient(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.error || 'Request failed');
+    throw new Error(data?.error || data?.message || 'Request failed');
   }
 
   return data;

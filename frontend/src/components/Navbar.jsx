@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, Menu, X, Brain, BookOpen, Flame, Code2, FileText, Layers, TrendingUp, Zap, Map, ChevronDown, Target, Briefcase, GraduationCap } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

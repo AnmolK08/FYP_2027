@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import Navbar from '../components/Navbar';
 
 export default function ProtectedRoute({ children }) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 import { useMockInterviews, useCreateMockInterview, useUpdateMockInterview } from '../../features/interview/hooks/useInterview';
 import { Button } from '@/components/ui/button';
 import {

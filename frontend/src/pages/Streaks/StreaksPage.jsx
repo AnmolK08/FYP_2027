@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../../features/auth/hooks/useAuth';
 import { useActivity, useCheckIn } from '../../features/profile/hooks/useUserStats';
 import { Button } from '@/components/ui/button';
 import { Flame, Target, Check, Trophy } from 'lucide-react';

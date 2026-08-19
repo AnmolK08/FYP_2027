@@ -1,12 +1,12 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { mentorApi } from '../mentor.api';
+import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
 
 export function useChatSessions() {
   return useQuery({
     queryKey: ['chatSessions'],
     queryFn: async () => {
-      const data = await mentorApi.getChatSessions();
+      const data = await api.getChatSessions();
       return data.sessions;
     },
   });
@@ -17,7 +17,7 @@ export function useChatMessages(sessionId) {
     queryKey: ['chatMessages', sessionId],
     queryFn: async () => {
       if (!sessionId) return [];
-      const data = await mentorApi.getChatHistory(sessionId);
+      const data = await api.getChatHistory(sessionId);
       return data.messages;
     },
     enabled: !!sessionId,
@@ -26,7 +26,7 @@ export function useChatMessages(sessionId) {
 
 export function useSendChatMessage() {
   return useMutation({
-    mutationFn: ({ message, sessionId }) => mentorApi.sendChatMessage(message, sessionId),
+    mutationFn: ({ message, sessionId }) => api.sendChatMessage(message, sessionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
     },
@@ -35,6 +35,6 @@ export function useSendChatMessage() {
 
 export function useGenerateWeaknessPlan() {
   return useMutation({
-    mutationFn: () => mentorApi.generateWeaknessPlan(),
+    mutationFn: () => api.generateWeaknessPlan(),
   });
 }
