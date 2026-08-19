@@ -27,6 +27,7 @@ export const syncLeetcodeStats = async (userId) => {
             submitStats: submitStatsGlobal {
               acSubmissionNum { difficulty count }
             }
+            submissionCalendar
             tagProblemCounts {
               advanced { tagName problemsSolved }
               intermediate { tagName problemsSolved }
@@ -35,6 +36,12 @@ export const syncLeetcodeStats = async (userId) => {
           }
           userContestRanking(username: $username) {
             attendedContestsCount rating globalRanking topPercentage
+          }
+          userContestRankingHistory(username: $username) {
+            attended
+            rating
+            ranking
+            contest { title startTime }
           }
         }
       `,
@@ -57,6 +64,62 @@ export const syncLeetcodeStats = async (userId) => {
   }
 
   const contest = profileData.data?.userContestRanking || {};
+
+  // Build rating history from contest ranking history
+  const contestHistory = profileData.data?.userContestRankingHistory || [];
+  const ratingHistory = contestHistory
+    .filter((entry) => entry.attended)
+    .map((entry) => ({
+      contest: entry.contest?.title || '',
+      timestamp: entry.contest?.startTime || 0,
+      rating: Math.round(entry.rating || 0),
+      ranking: entry.ranking || 0,
+    }))
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Parse submission calendar
+  let submissionCalendar = {};
+  try {
+    submissionCalendar = mu.submissionCalendar ? JSON.parse(mu.submissionCalendar) : {};
+  } catch {
+    submissionCalendar = {};
+  }
+
+  // Compute streak and active days from submission calendar
+  // LeetCode timestamps are Unix seconds at midnight UTC for each day
+  const calEntries = Object.entries(submissionCalendar);
+  const daySet = new Set();
+  for (const [ts, count] of calEntries) {
+    if (count > 0) {
+      // Normalize to date string for reliable day matching
+      const d = new Date(Number(ts) * 1000);
+      const dayKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      daySet.add(dayKey);
+    }
+  }
+
+  // Count active days in last 30 days
+  let activeDays = 0;
+  const now = new Date();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+    const dayKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    if (daySet.has(dayKey)) activeDays++;
+  }
+
+  // Compute current streak: traverse backwards from today until a gap
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+    const dayKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    if (daySet.has(dayKey)) {
+      streak++;
+    } else {
+      // Allow today to have no submissions yet (check if first gap is today)
+      if (i === 0) continue;
+      break;
+    }
+  }
 
   const tags = [];
   for (const t of mu.tagProblemCounts?.fundamental || []) {
@@ -86,6 +149,10 @@ export const syncLeetcodeStats = async (userId) => {
       globalRanking: contest.globalRanking || 0,
       topPercentage: contest.topPercentage || 0,
       tags: tags.slice(0, 15),
+      ratingHistory,
+      submissionCalendar,
+      streak,
+      activeDays,
       universalScore,
       lastSynced: new Date(),
     },
@@ -103,6 +170,10 @@ export const syncLeetcodeStats = async (userId) => {
       globalRanking: contest.globalRanking || 0,
       topPercentage: contest.topPercentage || 0,
       tags: tags.slice(0, 15),
+      ratingHistory,
+      submissionCalendar,
+      streak,
+      activeDays,
       universalScore,
       lastSynced: new Date(),
     },

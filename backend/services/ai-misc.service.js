@@ -1,21 +1,29 @@
 export const predictContestDelta = (currentRating, predictedRank, participants) => {
-  if (!currentRating || !predictedRank) {
-    const error = new Error('current_rating and predicted_rank are required');
+  const rating = Number(currentRating);
+  const rank = Number(predictedRank);
+  const totalParticipants = participants === undefined ? 20000 : Number(participants);
+
+  if (!Number.isFinite(rating) || !Number.isFinite(rank) || !Number.isFinite(totalParticipants)) {
+    const error = new Error('current_rating, predicted_rank, and participants must be numbers');
     error.statusCode = 400;
     throw error;
   }
 
-  const parts = participants || 20000;
-  
-  // Elo-ish projection
-  const pct = Math.max(0.001, Math.min(0.999, predictedRank / Math.max(1, parts)));
+  if (rating < 0 || rank < 1 || totalParticipants < 1 || rank > totalParticipants) {
+    const error = new Error('current_rating must be non-negative, and predicted_rank must be between 1 and participants');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const parts = Math.round(totalParticipants);
+  const pct = rank / parts;
   const perf = 1500 - 400 * (pct - 0.5) * 4;
   
   const k = 32;
-  const expected = 1 / (1 + Math.pow(10, (1500 - currentRating) / 400));
+  const expected = 1 / (1 + Math.pow(10, (1500 - rating) / 400));
   const actual = 1 - pct;
   const delta = Math.round(k * (actual - expected) * 10) / 10;
-  const new_rating = Math.round((currentRating + delta) * 10) / 10;
+  const new_rating = Math.round((rating + delta) * 10) / 10;
   
   return {
     delta,

@@ -63,7 +63,7 @@ export const api = {
 
   // Leaderboard
   async getLeaderboard(scope, sort) {
-    return apiClient(`/leaderboard?scope=${scope}&sort=${sort}`);
+    return apiClient(`/leetcode/leaderboard?scope=${scope}&sort=${sort}`);
   },
 
   // Mentor / Chat
@@ -167,7 +167,7 @@ export const api = {
 
   // Predictor
   async predictContest(currentRating, predictedRank, participants) {
-    return apiClient('/predict/contest', {
+    return apiClient('/ai/contest', {
       method: 'POST',
       body: {
         current_rating: currentRating,

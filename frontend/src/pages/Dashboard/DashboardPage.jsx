@@ -5,11 +5,12 @@ import { useLeetCodeStats, useSyncLeetCode } from '../../features/profile/hooks/
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import {
   RefreshCw, Trophy, Award, Flame, Crown, Medal, Target, Mountain,
-  Shield, Star, Zap, Swords, ExternalLink, TrendingUp,
+  Shield, Star, Zap, Swords, ExternalLink,
 } from 'lucide-react';
 import ProfileEditor from '../../features/profile/components/ProfileEditor';
 
@@ -33,7 +34,22 @@ const DEMO_STATS = {
   contests_attended: 24,
   global_ranking: 12543,
   streak: 19,
+  active_days: 22,
   universal_score: 2847,
+  rating_history: [
+    { contest: 'Weekly Contest 350', timestamp: 1688342400, rating: 1510, ranking: 8432 },
+    { contest: 'Weekly Contest 352', timestamp: 1689552000, rating: 1548, ranking: 7891 },
+    { contest: 'Biweekly Contest 110', timestamp: 1690156800, rating: 1602, ranking: 6543 },
+    { contest: 'Weekly Contest 356', timestamp: 1691971200, rating: 1573, ranking: 7102 },
+    { contest: 'Weekly Contest 358', timestamp: 1693180800, rating: 1645, ranking: 5874 },
+    { contest: 'Biweekly Contest 113', timestamp: 1694390400, rating: 1701, ranking: 4932 },
+    { contest: 'Weekly Contest 362', timestamp: 1695600000, rating: 1689, ranking: 5210 },
+    { contest: 'Weekly Contest 365', timestamp: 1697414400, rating: 1756, ranking: 4102 },
+    { contest: 'Biweekly Contest 116', timestamp: 1698624000, rating: 1798, ranking: 3654 },
+    { contest: 'Weekly Contest 370', timestamp: 1700438400, rating: 1834, ranking: 3201 },
+    { contest: 'Weekly Contest 373', timestamp: 1702252800, rating: 1812, ranking: 3502 },
+    { contest: 'Weekly Contest 376', timestamp: 1704067200, rating: 1894, ranking: 2987 },
+  ],
 };
 
 export default function DashboardPage() {
@@ -67,7 +83,9 @@ export default function DashboardPage() {
       contests_attended: stats.contestsAttended ?? 0,
       global_ranking: stats.globalRanking ?? 0,
       streak: stats.streak ?? 0,
+      active_days: stats.activeDays ?? 0,
       universal_score: stats.universalScore ?? 0,
+      rating_history: stats.ratingHistory ?? [],
     };
   }, [stats]);
 
@@ -91,14 +109,21 @@ export default function DashboardPage() {
 
   const heatmapData = useMemo(() => {
     const cal = stats?.submissionCalendar || {};
+    // Build a lookup map keyed by YYYY-MM-DD for reliable matching
+    const dayMap = {};
+    for (const [ts, count] of Object.entries(cal)) {
+      const d = new Date(Number(ts) * 1000);
+      const dayKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      dayMap[dayKey] = (dayMap[dayKey] || 0) + count;
+    }
     const cells = [];
+    const now = new Date();
     for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const ts = Math.floor(d.getTime() / 1000).toString();
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+      const dayKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
       cells.push({
         date: d.toLocaleDateString(),
-        count: cal[ts] || 0,
+        count: dayMap[dayKey] || 0,
       });
     }
     return cells;
@@ -112,7 +137,7 @@ export default function DashboardPage() {
             <div>
               <div className="text-overline">Welcome back</div>
               <h1 className="font-heading text-3xl lg:text-5xl tracking-tight text-foreground mt-2">
-                {profile?.name?.split(' ')[0] || 'Student'}&apos;s dashboard
+                {profile?.name?.split(' ')[0] || 'Student'}&apos;s Sphere
               </h1>
               <p className="text-muted-foreground mt-2 text-sm">
                 <span className="font-mono-display">{profile?.leetcodeUsername || 'no leetcode handle'}</span>
@@ -138,7 +163,7 @@ export default function DashboardPage() {
               <section className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-10" data-testid="metrics-row">
                 <Metric label="Total Solved" value={displayStats.total_solved} sub={`#${displayStats.global_ranking?.toLocaleString() || '-'} global`} />
                 <Metric label="Contest Rating" value={displayStats.contest_rating?.toFixed(0) || 0} sub={`${displayStats.contests_attended || 0} contests`} mono />
-                <Metric label="Streak (30d)" value={`${Math.min(displayStats.streak || 0, 30)}d`} sub="last active days" />
+                <Metric label="Current Streak" value={`${displayStats.streak || 0}d`} sub={`${displayStats.active_days || 0} active days in 30d`} />
                 <Metric label="Universal Score" value={Math.round(displayStats.universal_score || 0)} sub="solved + rating" />
               </section>
 
@@ -185,14 +210,63 @@ export default function DashboardPage() {
                   </div>
                 </Card>
 
-                <Card title="Rating Trend" subtitle="Recent contests" testid="card-rating" className="lg:col-span-3">
-                  {displayStats.contest_rating && displayStats.contest_rating > 0 ? (
-                    <div className="flex items-center justify-center h-56">
-                      <div className="text-center">
-                        <TrendingUp size={40} className="mx-auto text-primary mb-2" />
-                        <div className="font-heading text-4xl text-foreground">{displayStats.contest_rating.toFixed(0)}</div>
-                        <div className="text-muted-foreground text-sm">rating</div>
-                      </div>
+                <Card title="Rating Trend" subtitle={`${displayStats.contests_attended || 0} contests attended`} testid="card-rating" className="lg:col-span-3">
+                  {displayStats.rating_history && displayStats.rating_history.length > 0 ? (
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={displayStats.rating_history.map((entry) => ({
+                            ...entry,
+                            date: new Date(entry.timestamp * 1000).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                          }))}
+                          margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient id="ratingGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={{ stroke: 'hsl(var(--border))' }}
+                            tickLine={false}
+                            interval="preserveStartEnd"
+                          />
+                          <YAxis
+                            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                            axisLine={false}
+                            tickLine={false}
+                            domain={['dataMin - 50', 'dataMax + 50']}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: 8,
+                              color: 'hsl(var(--foreground))',
+                              fontSize: 12,
+                              padding: '8px 12px',
+                            }}
+                            formatter={(value) => [`${value}`, 'Rating']}
+                            labelFormatter={(label, payload) => {
+                              const entry = payload?.[0]?.payload;
+                              return entry?.contest || label;
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="rating"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            fill="url(#ratingGradient)"
+                            dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                            activeDot={{ r: 5, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
                     </div>
                   ) : (
                     <div className="h-56 grid place-items-center text-muted-foreground text-sm font-mono-display">
