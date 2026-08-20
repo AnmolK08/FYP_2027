@@ -28,6 +28,7 @@ export function useSyncLeetCode() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leetcode-stats'] });
       queryClient.invalidateQueries({ queryKey: ['activity'] });
+      queryClient.invalidateQueries({ queryKey: ['streak-summary'] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
     },
   });
@@ -46,6 +47,18 @@ export function useActivity() {
   });
 }
 
+export function useStreakSummary() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['streak-summary', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      return api.getStreakSummary();
+    },
+    enabled: !!user,
+  });
+}
+
 export function useCheckIn() {
   const { user } = useAuth();
 
@@ -56,6 +69,7 @@ export function useCheckIn() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activity'] });
+      queryClient.invalidateQueries({ queryKey: ['streak-summary'] });
     },
   });
 }

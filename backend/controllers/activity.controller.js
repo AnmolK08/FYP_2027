@@ -9,6 +9,15 @@ export const getActivity = async (req, res, next) => {
   }
 };
 
+export const getStreakSummary = async (req, res, next) => {
+  try {
+    const summary = await activityService.getUserStreakSummary(req.user.id);
+    res.json(summary);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const checkIn = async (req, res, next) => {
   try {
     const result = await activityService.checkInUser(req.user.id);

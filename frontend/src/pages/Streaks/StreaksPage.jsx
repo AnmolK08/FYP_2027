@@ -1,87 +1,55 @@
 import { useMemo } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useAuth } from '../../features/auth/hooks/useAuth';
-import { useActivity, useCheckIn } from '../../features/profile/hooks/useUserStats';
+import { useCheckIn, useStreakSummary } from '../../features/profile/hooks/useUserStats';
 import { Button } from '@/components/ui/button';
 import { Flame, Target, Check, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StreaksPage() {
-  const { profile } = useAuth();
-  const { data: activities = [], isLoading: loading } = useActivity();
+  const { data, isLoading: loading } = useStreakSummary();
   const checkIn = useCheckIn();
 
-  const data = useMemo(() => {
-    const days = activities.map((a) => a.date);
-    const daySet = new Set(days);
+const calendar = useMemo(() => {
+  const heatmap = data?.heatmap || [];
+  if (!heatmap.length) return { weeks: [], months: [] };
 
-    // Calculate current streak
-    let currentStreak = 0;
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+  // 1. Pad the front so the grid starts on a Sunday (col-major, 7 rows)
+  const firstDate = new Date(`${heatmap[0].date}T00:00:00Z`);
+  const leadingEmptyDays = firstDate.getUTCDay(); // 0 = Sun ... 6 = Sat
+  const cells = [
+    ...Array.from({ length: leadingEmptyDays }, () => null),
+    ...heatmap,
+  ];
+  while (cells.length % 7 !== 0) cells.push(null); // pad the tail too
 
-    if (daySet.has(todayStr)) {
-      currentStreak = 1;
-      let d = new Date(today);
-      d.setDate(d.getDate() - 1);
-      while (daySet.has(d.toISOString().split('T')[0])) {
-        currentStreak++;
-        d.setDate(d.getDate() - 1);
-      }
-    } else {
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-      if (daySet.has(yesterdayStr)) {
-        currentStreak = 1;
-        let d = new Date(yesterday);
-        d.setDate(d.getDate() - 1);
-        while (daySet.has(d.toISOString().split('T')[0])) {
-          currentStreak++;
-          d.setDate(d.getDate() - 1);
-        }
-      }
-    }
+  // 2. Chunk into week-columns (7 cells each, top-to-bottom = Sun-Sat)
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
 
-    // Calculate longest streak
-    let longestStreak = 0;
-    let run = 0;
-    let prevDate = null;
+  // 3. One label per week-column, LeetCode-style:
+  //    - a column gets labeled if it contains the 1st of a month
+  //    - the very first column is always labeled too (it's a partial
+  //      month at the start of the range and would otherwise be skipped,
+  //      since it usually doesn't contain a literal "1st")
+  const months = weeks.map((week, weekIndex) => {
+    const realCells = week.filter(Boolean);
+    if (!realCells.length) return '';
 
-    for (const d of days.sort()) {
-      if (prevDate) {
-        const prev = new Date(prevDate);
-        const curr = new Date(d);
-        const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
-        if (diffDays === 1) {
-          run++;
-        } else {
-          run = 1;
-        }
-      } else {
-        run = 1;
-      }
-      longestStreak = Math.max(longestStreak, run);
-      prevDate = d;
-    }
+    const firstOfMonthCell = realCells.find(
+      (cell) => new Date(`${cell.date}T00:00:00Z`).getUTCDate() === 1
+    );
 
-    // Generate heatmap for past 365 days
-    const heatmap = [];
-    for (let i = 364; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dStr = d.toISOString().split('T')[0];
-      heatmap.push({ date: dStr, active: daySet.has(dStr) });
-    }
+    if (!firstOfMonthCell && weekIndex !== 0) return '';
 
-    return {
-      current_streak: currentStreak,
-      longest_streak: longestStreak,
-      total_active_days: days.length,
-      daily_goal: profile?.daily_goal || 3,
-      heatmap,
-    };
-  }, [activities, profile?.daily_goal]);
+    const labelSourceCell = firstOfMonthCell || realCells[0];
+    const date = new Date(`${labelSourceCell.date}T00:00:00Z`);
+    return date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+  });
+
+  return { weeks, months };
+}, [data?.heatmap]);
 
   const handleCheckin = async () => {
     try {
@@ -105,7 +73,7 @@ export default function StreaksPage() {
   }
 
   const today = new Date().toISOString().split('T')[0];
-  const checkedToday = data.heatmap.some((c) => c.date === today && c.active);
+  const checkedToday = data?.heatmap?.some((c) => c.date === today && c.active);
 
   return (
     <ProtectedRoute>
@@ -175,18 +143,36 @@ export default function StreaksPage() {
               </div>
             </div>
             <div className="mt-5 overflow-x-auto">
-              <div
-                className="grid grid-rows-7 grid-flow-col gap-[3px]"
-                style={{ gridAutoColumns: '11px' }}
-                data-testid="streak-heatmap"
-              >
-                {data.heatmap.map((c, i) => (
-                  <div
-                    key={i}
-                    className={`cell ${c.active ? 'cell-4' : ''}`}
-                    title={c.date}
-                  />
-                ))}
+              <div className="min-w-max" data-testid="streak-heatmap">
+                <div className="flex gap-1">
+                  <div className="grid grid-rows-7 gap-[3px] w-7 pr-1 text-[9px] leading-[10px] text-muted-foreground">
+                    <span />
+                    <span>Mon</span>
+                    <span />
+                    <span>Wed</span>
+                    <span />
+                    <span>Fri</span>
+                    <span />
+                  </div>
+                  <div className="flex gap-[3px]">
+                    {calendar.weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className={`flex flex-col${calendar.months[weekIndex] && weekIndex > 0 ? ' ml-[6px]' : ''}`}>
+                        <div className="grid grid-rows-7 gap-[3px]">
+                          {week.map((cell, dayIndex) => (
+                            <div
+                              key={`${weekIndex}-${dayIndex}`}
+                              className={`cell ${cell ? cell.count >= 10 ? 'cell-4' : cell.count >= 5 ? 'cell-3' : cell.count >= 2 ? 'cell-2' : cell.count > 0 ? 'cell-1' : cell.active ? 'cell-4' : '' : ''}`}
+                              title={cell?.date || ''}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-2 h-3">
+                          {calendar.months[weekIndex]}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

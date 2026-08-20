@@ -50,7 +50,7 @@ export const api = {
   },
 
   async getStreakSummary() {
-    return apiClient('/streak/summary');
+    return apiClient('/activity/streaks');
   },
 
   async getActivity() {

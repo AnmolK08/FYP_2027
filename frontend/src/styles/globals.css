@@ -118,13 +118,13 @@
   }
 
   .cell {
-    @apply h-2.5 w-2.5 rounded-[2px] bg-muted;
+    @apply h-2.5 w-2.5 rounded-[2px] bg-slate-200 dark:bg-slate-800;
   }
 
-  .cell-1 { @apply bg-emerald-100 dark:bg-emerald-900; }
-  .cell-2 { @apply bg-emerald-200 dark:bg-emerald-800; }
-  .cell-3 { @apply bg-emerald-300 dark:bg-emerald-700; }
-  .cell-4 { @apply bg-emerald-400 dark:bg-emerald-600; }
+  .cell-1 { @apply bg-emerald-300 dark:bg-emerald-900; }
+  .cell-2 { @apply bg-emerald-500 dark:bg-emerald-700; }
+  .cell-3 { @apply bg-emerald-600 dark:bg-emerald-500; }
+  .cell-4 { @apply bg-emerald-800 dark:bg-emerald-300; }
 
   .fade-up {
     animation: fadeUp 0.6s ease forwards;
