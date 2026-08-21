@@ -1,13 +1,6 @@
 import * as leetcodeService from '../services/leetcode.service.js';
 import { addSyncJob, isQueueReady } from '../queues/leetcodeSync.queue.js';
 
-/**
- * LeetCode Controller
- * -------------------
- * POST /sync now returns 202 Accepted when BullMQ is available,
- * falling back to synchronous sync otherwise.
- */
-
 export const syncStats = async (req, res, next) => {
   try {
     // Prefer async queue if available

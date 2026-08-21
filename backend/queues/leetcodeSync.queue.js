@@ -2,20 +2,16 @@ import { Queue } from 'bullmq';
 import { redisClient, isRedisReady, getRedisUrl } from '../config/redis.js';
 import { syncLockKey, SYNC_LOCK_TTL } from '../utils/redisKeys.js';
 
-/**
- * LeetCode Sync Queue (BullMQ)
- * ----------------------------
- * Manages async LeetCode synchronization jobs.
- * Uses a Redis-based dedup lock to prevent duplicate concurrent syncs
- * for the same user.
- */
+// LeetCode Sync Queue (BullMQ)
+// Manages async LeetCode synchronization jobs.
+// Uses a Redis-based dedup lock to prevent duplicate concurrent syncs
+// for the same user.
+ 
 
 let syncQueue = null;
 
-/**
- * Initialise the BullMQ queue.
- * Call after Redis is connected.
- */
+// Initialise the BullMQ queue.
+// Call after Redis is connected.
 export const initSyncQueue = () => {
   const redisUrl = getRedisUrl();
   if (!redisUrl) {
@@ -47,18 +43,13 @@ export const initSyncQueue = () => {
   }
 };
 
-/**
- * Returns true if the queue is available for accepting jobs.
- */
+
+//  Returns true if the queue is available for accepting jobs.
+
 export const isQueueReady = () => syncQueue !== null;
 
-/**
- * Add a LeetCode sync job for a user.
- * Uses a Redis lock to prevent duplicate concurrent jobs.
- *
- * @param {string} userId
- * @returns {{ queued: boolean, reason?: string }}
- */
+// Add a LeetCode sync job for a user.
+// Uses a Redis lock to prevent duplicate concurrent jobs.
 export const addSyncJob = async (userId) => {
   if (!syncQueue) {
     return { queued: false, reason: 'Queue unavailable' };

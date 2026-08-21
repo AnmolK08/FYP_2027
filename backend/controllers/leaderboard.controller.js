@@ -1,11 +1,5 @@
 import * as leaderboardService from '../services/leaderboard.service.js';
 
-/**
- * Leaderboard Controller
- * ----------------------
- * Handles leaderboard reads, user rank lookup, and admin rebuild.
- */
-
 export const getLeaderboard = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
