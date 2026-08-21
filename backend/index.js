@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import routes from './routes/index.js';
+import { connectRedis } from './config/redis.js';
+import { initSyncQueue } from './queues/leetcodeSync.queue.js';
+import { startSyncWorker } from './workers/leetcodeSync.worker.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +31,20 @@ app.use(errorMiddleware);
 // Handle server startup
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const start = async () => {
+  // Connect Redis (non-fatal if unavailable, run in background)
+  connectRedis().catch(err => console.error('Redis init failed:', err));
+
+  // Initialise BullMQ queue & worker (requires Redis)
+  initSyncQueue();
+  startSyncWorker();
+
+  app.listen(PORT, () => {
+    console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  });
+};
+
+start().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });

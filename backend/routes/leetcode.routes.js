@@ -8,6 +8,5 @@ router.use(authenticate);
 
 router.post('/sync', leetcodeController.syncStats);
 router.get('/stats', leetcodeController.getStats);
-router.get('/leaderboard', leetcodeController.getLeaderboard);
 
 export default router;

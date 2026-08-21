@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Medal } from 'lucide-react';
 
-export default function LeaderboardTable({ sortedFiltered, loading }) {
+export default function LeaderboardTable({ rows, loading }) {
   if (loading) {
     return (
       <div className="p-10 text-center text-muted-foreground font-mono-display text-sm" data-testid="leaderboard-loading">
@@ -10,7 +10,7 @@ export default function LeaderboardTable({ sortedFiltered, loading }) {
     );
   }
 
-  if (sortedFiltered.length === 0) {
+  if (rows.length === 0) {
     return (
       <div className="p-12 text-center text-muted-foreground" data-testid="leaderboard-empty">
         <div className="font-heading text-foreground text-lg">No students match this view.</div>
@@ -34,7 +34,7 @@ export default function LeaderboardTable({ sortedFiltered, loading }) {
           </tr>
         </thead>
         <tbody>
-          {sortedFiltered.map((r) => (
+          {rows.map((r) => (
             <tr
               key={r.user_id}
               data-testid={`row-${r.user_id}`}

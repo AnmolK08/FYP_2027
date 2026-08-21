@@ -10,6 +10,8 @@ import mentorRoutes from './mentor.routes.js';
 import aiMiscRoutes from './ai-misc.routes.js';
 import interviewRoutes from './interview.routes.js';
 import leetcodeRoutes from './leetcode.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
+import leaderboardRoutes from './leaderboard.routes.js';
 
 const router = Router();
 
@@ -29,5 +31,9 @@ router.use('/interviews', interviewRoutes);
 
 // Leetcode service routes
 router.use('/leetcode', leetcodeRoutes);
+
+// Dashboard & Leaderboard (Redis-backed)
+router.use('/dashboard', dashboardRoutes);
+router.use('/leaderboard', leaderboardRoutes);
 
 export default router;

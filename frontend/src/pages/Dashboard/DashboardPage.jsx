@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useLeetCodeStats, useSyncLeetCode } from '../../features/profile/hooks/useUserStats';
+import { useSyncLeetCode } from '../../features/profile/hooks/useUserStats';
+import { useDashboard } from '../../features/dashboard/hooks/useDashboard';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -54,8 +55,10 @@ const DEMO_STATS = {
 
 export default function DashboardPage() {
   const { user, profile, refreshProfile } = useAuth();
-  const { data: stats, isLoading: statsLoading } = useLeetCodeStats();
+  const { data: dashboardData, isLoading: statsLoading } = useDashboard();
   const syncLeetCode = useSyncLeetCode();
+
+  const stats = dashboardData?.stats;
 
   const syncing = syncLeetCode.isPending;
 
@@ -66,7 +69,7 @@ export default function DashboardPage() {
     }
     try {
       await syncLeetCode.mutateAsync();
-      toast.success('LeetCode profile synced');
+      toast.success('LeetCode profile sync queued. Data will update shortly.');
     } catch (e) {
       toast.error('Sync failed');
     }

@@ -1,54 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
-import { useLeaderboard } from '../../features/leaderboard/hooks/useLeaderboard';
-import { Input } from '@/components/ui/input';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLeaderboard, useMyLeaderboardRank } from '../../features/leaderboard/hooks/useLeaderboard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trophy, Search, ArrowUpDown } from 'lucide-react';
+import { Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import LeaderboardTable from '../../features/leaderboard/components/LeaderboardTable';
 
-const SCOPE_OPTIONS = [
-  { v: 'global', label: 'Global' },
-  { v: 'college', label: 'My College' },
-  { v: 'department', label: 'My Dept' },
-];
-
-const SORT_OPTIONS = [
-  { v: 'universal_score', label: 'Universal Score' },
-  { v: 'total_solved', label: 'Total Solved' },
-  { v: 'contest_rating', label: 'Contest Rating' },
-  { v: 'hard', label: 'Hard Solved' },
-];
-
 export default function LeaderboardPage() {
-  const [scope, setScope] = useState('global');
-  const [sort, setSort] = useState('universal_score');
-  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
-  const { data: rows = [], isLoading: loading } = useLeaderboard(scope);
+  const { data, isLoading: loading } = useLeaderboard(page, limit);
+  const { data: myRank } = useMyLeaderboardRank();
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter(
-      (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.leetcode_username?.toLowerCase().includes(q) ||
-        r.college?.toLowerCase().includes(q) ||
-        r.department?.toLowerCase().includes(q)
-    );
-  }, [rows, search]);
+  const rows = data?.users || [];
+  const totalPages = data?.totalPages || 1;
+  const totalUsers = data?.total || 0;
 
-  const sortedFiltered = useMemo(() => {
-    const sorted = [...filtered].sort((a, b) => (b[sort] || 0) - (a[sort] || 0));
-    sorted.forEach((r, i) => { r.rank = i + 1; });
-    return sorted;
-  }, [filtered, sort]);
-
-  const podium = sortedFiltered.slice(0, 3);
+  // Only show podium on the first page
+  const podium = page === 1 ? rows.slice(0, 3) : [];
 
   return (
     <ProtectedRoute>
@@ -64,51 +34,14 @@ export default function LeaderboardPage() {
                 Universal Score = Easy x 1 + Medium x 3 + Hard x 6 + Contest Rating x 0.5
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-overline">{rows.length} students</span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-overline">{totalUsers} students</span>
+              {myRank && (
+                <div className="text-sm font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                  My Rank: #{myRank.rank}
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className="mt-8 bg-card border border-border rounded-md p-4 flex flex-col lg:flex-row lg:items-center gap-3">
-            <Tabs value={scope} onValueChange={(v) => setScope(v)} className="w-full lg:w-auto">
-              <TabsList className="bg-muted">
-                {SCOPE_OPTIONS.map((o) => (
-                  <TabsTrigger
-                    key={o.v}
-                    value={o.v}
-                    data-testid={`scope-${o.v}`}
-                    className="data-[state=active]:bg-background data-[state=active]:text-foreground"
-                  >
-                    {o.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
-            <div className="flex-1 relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search name, handle, or college..."
-                data-testid="leaderboard-search"
-                className="pl-9 h-10"
-              />
-            </div>
-
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-[200px] h-10" data-testid="leaderboard-sort">
-                <ArrowUpDown size={14} className="text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SORT_OPTIONS.map((o) => (
-                  <SelectItem key={o.v} value={o.v}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {podium.length === 3 && (
@@ -120,7 +53,32 @@ export default function LeaderboardPage() {
           )}
 
           <section className="mt-6 bg-card border border-border rounded-md overflow-hidden">
-            <LeaderboardTable sortedFiltered={sortedFiltered} loading={loading} />
+            <LeaderboardTable rows={rows} loading={loading} />
+            
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+              <div className="p-4 border-t border-border flex items-center justify-between">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft size={16} className="mr-1" /> Previous
+                </Button>
+                <div className="text-sm text-muted-foreground font-mono-display">
+                  Page {page} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                >
+                  Next <ChevronRight size={16} className="ml-1" />
+                </Button>
+              </div>
+            )}
           </section>
         </div>
       </main>

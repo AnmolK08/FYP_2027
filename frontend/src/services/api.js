@@ -41,6 +41,10 @@ export const api = {
   },
 
   // Profile / LeetCode
+  async getDashboard() {
+    return apiClient('/dashboard');
+  },
+
   async syncLeetCode() {
     return apiClient('/leetcode/sync', { method: 'POST' });
   },
@@ -62,8 +66,12 @@ export const api = {
   },
 
   // Leaderboard
-  async getLeaderboard(scope, sort) {
-    return apiClient(`/leetcode/leaderboard?scope=${scope}&sort=${sort}`);
+  async getLeaderboard(page = 1, limit = 20) {
+    return apiClient(`/leaderboard?page=${page}&limit=${limit}`);
+  },
+
+  async getMyLeaderboardRank() {
+    return apiClient('/leaderboard/me');
   },
 
   // Mentor / Chat

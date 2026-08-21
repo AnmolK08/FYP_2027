@@ -30,6 +30,7 @@ export function useSyncLeetCode() {
       queryClient.invalidateQueries({ queryKey: ['activity'] });
       queryClient.invalidateQueries({ queryKey: ['streak-summary'] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

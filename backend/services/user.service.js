@@ -1,4 +1,6 @@
 import prisma from '../config/prisma.js';
+import { invalidateDashboardCache } from './dashboard.service.js';
+import { removeUser as removeUserFromLeaderboard } from './leaderboard.service.js';
 
 /**
  * Service responsibilities:
@@ -41,17 +43,28 @@ export const updateUser = async (id, updateData) => {
   await findUserById(id); // Will throw if not found
 
   // 2. Update user
-  return await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id },
     data: updateData,
     select: { id: true, email: true, name: true, updatedAt: true },
   });
+
+  // 3. Invalidate dashboard cache
+  await invalidateDashboardCache(id);
+
+  return user;
 };
 
 export const deleteUser = async (id) => {
   await findUserById(id); // Will throw if not found
 
-  return await prisma.user.delete({
+  const result = await prisma.user.delete({
     where: { id },
   });
+
+  // Clean up all Redis data for this user
+  await invalidateDashboardCache(id);
+  await removeUserFromLeaderboard(id);
+
+  return result;
 };

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '../config/prisma.js';
+import { invalidateDashboardCache } from './dashboard.service.js';
 
 export const registerUser = async (userData) => {
   const { email, password, name, college, department, leetcodeUsername } = userData;
@@ -109,5 +110,9 @@ export const updateUserProfile = async (id, updateData) => {
   });
 
   const { password: _, ...userWithoutPassword } = user;
+
+  // Invalidate dashboard cache so next read picks up the profile changes
+  await invalidateDashboardCache(id);
+
   return userWithoutPassword;
 };

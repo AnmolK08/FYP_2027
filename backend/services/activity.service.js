@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '../config/prisma.js';
+import { invalidateDashboardCache } from './dashboard.service.js';
 
 export const getUserActivity = async (userId) => {
   return await prisma.activity.findMany({
@@ -110,6 +111,8 @@ export const checkInUser = async (userId) => {
       checkedIn: true,
     },
   });
+  // Invalidate dashboard cache so activity section is fresh
+  await invalidateDashboardCache(userId);
 
   return { success: true };
 };
