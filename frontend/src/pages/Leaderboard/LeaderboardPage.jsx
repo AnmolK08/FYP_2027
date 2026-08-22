@@ -107,10 +107,12 @@ function PodiumCard({ row, place, featured }) {
         <AvatarFallback>{row.name.charAt(0)}</AvatarFallback>
       </Avatar>
       <div className="font-heading text-foreground mt-2">{row.name}</div>
-      <div className="text-xs text-muted-foreground font-mono-display">{row.leetcode_username}</div>
+      <div className="text-xs text-muted-foreground font-mono-display">{row.leetcodeUsername || '-'}</div>
       <div className="text-xs text-muted-foreground mt-1">{row.college}</div>
-      <div className="mt-3 font-heading text-2xl text-foreground">{Math.round(row.universal_score)}</div>
-      <div className="text-overline">score</div>
+      <div className="mt-3 font-heading text-2xl text-foreground">{Math.round(row.universalScore || 0)}</div>
+      <div className="text-xs text-muted-foreground font-mono-display mt-1">
+        Rating {Math.round(row.contestRating || 0)}
+      </div>
     </div>
   );
 }

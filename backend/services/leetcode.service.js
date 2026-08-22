@@ -14,7 +14,9 @@ export const syncLeetcodeStats = async (userId) => {
     throw error;
   }
 
+  // fetching the data from graphql api
   const parsedData = await fetchAndParseLeetcodeData(user.leetcodeUsername);
+  // storing in the db
   const stats = await persistLeetcodeData(userId, parsedData);
 
   // Update Redis AFTER PostgreSQL succeeds

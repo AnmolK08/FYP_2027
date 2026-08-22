@@ -36,8 +36,8 @@ export default function LeaderboardTable({ rows, loading }) {
         <tbody>
           {rows.map((r) => (
             <tr
-              key={r.user_id}
-              data-testid={`row-${r.user_id}`}
+              key={r.userId}
+              data-testid={`row-${r.userId}`}
               className={`border-b border-border last:border-0 hover:bg-muted/50 ${r.is_me ? 'bg-amber-50/40 dark:bg-amber-900/10' : ''}`}
             >
               <td className="px-5 py-4">
@@ -72,7 +72,7 @@ export default function LeaderboardTable({ rows, loading }) {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono-display">{r.leetcode_username}</div>
+                    <div className="text-xs text-muted-foreground font-mono-display">{r.leetcodeUsername || '-'}</div>
                   </div>
                 </div>
               </td>
@@ -80,7 +80,7 @@ export default function LeaderboardTable({ rows, loading }) {
                 <div className="text-foreground">{r.college || '-'}</div>
                 <div className="text-xs text-muted-foreground">{r.department || '-'}</div>
               </td>
-              <td className="px-5 py-4 text-right font-mono-display font-medium text-foreground">{r.total_solved}</td>
+              <td className="px-5 py-4 text-right font-mono-display font-medium text-foreground">{r.totalSolved}</td>
               <td className="px-5 py-4 text-right hidden sm:table-cell font-mono-display text-xs">
                 <span className="text-emerald-600 dark:text-emerald-400">{r.easy}</span>
                 <span className="text-muted-foreground mx-1">-</span>
@@ -89,10 +89,10 @@ export default function LeaderboardTable({ rows, loading }) {
                 <span className="text-rose-600 dark:text-rose-400">{r.hard}</span>
               </td>
               <td className="px-5 py-4 text-right font-mono-display text-foreground">
-                {Math.round(r.contest_rating)}
+                {Math.round(r.contestRating || 0)}
               </td>
               <td className="px-5 py-4 text-right font-mono-display font-semibold text-foreground">
-                {Math.round(r.universal_score)}
+                {Math.round(r.universalScore || 0)}
               </td>
             </tr>
           ))}

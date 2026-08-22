@@ -76,6 +76,11 @@ export const getLeaderboard = async (page = 1, limit = 20, requestingUserId = nu
               college: profile.college || null,
               department: profile.department || null,
               leetcodeUsername: profile.leetcodeUsername || null,
+              totalSolved: profile.leetcodeStats?.totalSolved || 0,
+              easy: profile.leetcodeStats?.easy || 0,
+              medium: profile.leetcodeStats?.medium || 0,
+              hard: profile.leetcodeStats?.hard || 0,
+              contestRating: profile.leetcodeStats?.contestRating || 0,
               universalScore: entry.score,
               is_me: entry.value === requestingUserId,
             };
@@ -196,6 +201,15 @@ const batchFetchProfiles = async (userIds) => {
       college: true,
       department: true,
       leetcodeUsername: true,
+      leetcodeStats: {
+        select: {
+          totalSolved: true,
+          easy: true,
+          medium: true,
+          hard: true,
+          contestRating: true,
+        },
+      },
     },
   });
 
@@ -227,6 +241,15 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
             college: true,
             department: true,
             leetcodeUsername: true,
+            leetcodeStats: {
+              select: {
+                totalSolved: true,
+                easy: true,
+                medium: true,
+                hard: true,
+                contestRating: true,
+              },
+            },
           },
         },
       },
@@ -244,6 +267,11 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
     college: entry.user?.college || null,
     department: entry.user?.department || null,
     leetcodeUsername: entry.user?.leetcodeUsername || null,
+    totalSolved: entry.user?.leetcodeStats?.totalSolved || 0,
+    easy: entry.user?.leetcodeStats?.easy || 0,
+    medium: entry.user?.leetcodeStats?.medium || 0,
+    hard: entry.user?.leetcodeStats?.hard || 0,
+    contestRating: entry.user?.leetcodeStats?.contestRating || 0,
     universalScore: entry.universalScore,
     is_me: entry.userId === requestingUserId,
   }));
