@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks/useAuth';
-import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -22,9 +22,11 @@ export default function ProtectedRoute({ children }) {
   }
 
   return (
-    <>
-      <Navbar />
-      {children}
-    </>
+    <div className="flex h-screen bg-background text-foreground">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+    </div>
   );
 }

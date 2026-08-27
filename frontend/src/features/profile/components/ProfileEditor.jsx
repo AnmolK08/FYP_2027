@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Settings2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useUpdateProfile } from '../hooks/useUserStats';
+import { createPortal } from 'react-dom';
 
-export default function ProfileEditor({ profile, onSaved }) {
-  const [open, setOpen] = useState(false);
+export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) {
   const [form, setForm] = useState({
     name: profile?.name || '',
     college: profile?.college || '',
@@ -35,7 +34,7 @@ export default function ProfileEditor({ profile, onSaved }) {
     try {
       await updateProfileMutation.mutateAsync(form);
       toast.success('Profile updated');
-      setOpen(false);
+      onOpenChange(false);
       onSaved?.();
     } catch (e) {
       toast.error('Update failed');
@@ -46,34 +45,66 @@ export default function ProfileEditor({ profile, onSaved }) {
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" data-testid="open-profile-editor">
-          <Settings2 size={15} strokeWidth={1.5} /> Edit profile
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="bg-card" data-testid="profile-editor-dialog">
-        <DialogHeader>
-          <DialogTitle className="font-heading">Edit profile</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+  if (!open) return null;
+
+  return createPortal(
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 9999 }}
+      data-testid="profile-editor-dialog"
+    >
+      {/* Backdrop */}
+      <div
+        style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)' }}
+        onClick={() => onOpenChange(false)}
+      />
+      {/* Dialog */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 10000,
+          width: '100%',
+          maxWidth: '28rem',
+        }}
+        className="border border-border bg-card rounded-lg p-6 shadow-2xl"
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 text-muted-foreground"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Header */}
+        <div className="mb-4">
+          <h2 className="font-heading text-lg text-foreground">Edit profile</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Update your details - changes are visible on the leaderboard.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
+
+        {/* Fields */}
         <div className="grid gap-3">
           <Field label="Name" v={form.name} onChange={set('name')} tid="edit-name" />
           <Field label="College" v={form.college} onChange={set('college')} tid="edit-college" />
           <Field label="Department" v={form.department} onChange={set('department')} tid="edit-department" />
           <Field label="LeetCode Handle" v={form.leetcodeUsername} onChange={set('leetcodeUsername')} mono tid="edit-leetcode" />
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 mt-5">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={save} disabled={saving} data-testid="save-profile" className="bg-primary text-primary-foreground">
             {saving ? 'Saving...' : 'Save changes'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 

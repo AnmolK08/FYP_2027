@@ -4,10 +4,8 @@ import { authenticate } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// All user routes require authentication
 router.use(authenticate);
-
-// Routes connect HTTP methods and URLs to middleware/controllers
+router.patch('/me', userController.updateMe);
 router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUserById);
 router.post('/', userController.createUser);

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useSyncLeetCode } from '../../features/profile/hooks/useUserStats';
@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import {
   RefreshCw, Trophy, Award, Flame, Crown, Medal, Target, Mountain,
-  Shield, Star, Zap, Swords, ExternalLink,
+  Shield, Star, Zap, Swords, ExternalLink, Settings2,
 } from 'lucide-react';
 import ProfileEditor from '../../features/profile/components/ProfileEditor';
 
@@ -55,6 +55,7 @@ const DEMO_STATS = {
 
 export default function DashboardPage() {
   const { user, profile, refreshProfile } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
   const { data: dashboardData, isLoading: statsLoading } = useDashboard();
   const syncLeetCode = useSyncLeetCode();
 
@@ -149,7 +150,19 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <ProfileEditor profile={profile} onSaved={() => { refreshProfile(); }} />
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('EDIT BUTTON CLICKED, setting editOpen to true');
+                  setEditOpen(true);
+                }}
+                data-testid="open-profile-editor"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-background text-foreground text-sm hover:bg-muted transition-colors"
+              >
+                <Settings2 size={15} strokeWidth={1.5} /> Edit profile
+              </button>
+              {console.log('RENDER: editOpen =', editOpen)}
+              <ProfileEditor profile={profile} onSaved={() => { refreshProfile(); }} open={editOpen} onOpenChange={setEditOpen} />
               <Button onClick={handleSync} disabled={syncing} data-testid="sync-leetcode" className="bg-primary text-primary-foreground">
                 <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
                 {syncing ? 'Syncing...' : 'Sync LeetCode'}

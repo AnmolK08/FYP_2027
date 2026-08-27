@@ -67,87 +67,12 @@ export default function Navbar() {
 
           {isAuthed && (
             <nav className="hidden lg:flex items-center gap-1">
-              {mainNavItems.map((item) => (
-                <Link key={item.href} to={item.href} className={linkClass(item.href) + " px-3"}>
-                  <item.icon size={15} strokeWidth={1.5} />
-                  {item.label}
-                  {item.badge && (
-                    <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              ))}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Target size={15} strokeWidth={1.5} />
-                    Practice
-                    <ChevronDown size={12} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {practiceItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link to={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <item.icon size={14} />
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Briefcase size={15} strokeWidth={1.5} />
-                    Career
-                    <ChevronDown size={12} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {careerItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link to={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <item.icon size={14} />
-                        {item.label}
-                        {item.badge && (
-                          <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <GraduationCap size={15} strokeWidth={1.5} />
-                    Learning
-                    <ChevronDown size={12} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {learningItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link to={item.href} className="flex items-center gap-2 cursor-pointer">
-                        <item.icon size={14} />
-                        {item.label}
-                        {item.badge && (
-                          <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <LayoutDashboard size={15} />
+                  Go to Dashboard
+                </Button>
+              </Link>
             </nav>
           )}
         </div>
@@ -224,92 +149,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isAuthed && mobileMenuOpen && (
-        <div className="lg:hidden border-t border-border bg-background">
-          <nav className="flex flex-col p-4 gap-1">
-            <div className="text-xs font-medium text-muted-foreground px-3 py-2">Main</div>
-            {mainNavItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md ${
-                  location.pathname === item.href
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <item.icon size={16} />
-                {item.label}
-                {item.badge && (
-                  <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-            <div className="text-xs font-medium text-muted-foreground px-3 py-2 mt-2">Practice</div>
-            {practiceItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md ${
-                  location.pathname === item.href
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <item.icon size={16} />
-                {item.label}
-              </Link>
-            ))}
-            <div className="text-xs font-medium text-muted-foreground px-3 py-2 mt-2">Career</div>
-            {careerItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md ${
-                  location.pathname === item.href
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <item.icon size={16} />
-                {item.label}
-                {item.badge && (
-                  <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-            <div className="text-xs font-medium text-muted-foreground px-3 py-2 mt-2">Learning</div>
-            {learningItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md ${
-                  location.pathname === item.href
-                    ? 'bg-muted text-foreground'
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                <item.icon size={16} />
-                {item.label}
-                {item.badge && (
-                  <span className="text-[10px] bg-success/20 text-success px-1.5 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

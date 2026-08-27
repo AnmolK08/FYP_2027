@@ -1,4 +1,4 @@
-import * as userService from '../services/user.service.js';
+ import * as userService from '../services/user.service.js';
 
 /**
  * Controller responsibilities:
@@ -43,6 +43,20 @@ export const updateUser = async (req, res, next) => {
     const updateData = req.body;
     const updatedUser = await userService.updateUser(id, updateData);
     res.status(200).json({ success: true, data: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMe = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const updateData = req.body;
+    
+    // The frontend expects { user: updatedUser } in the root of the response,
+    // not { success: true, data: user }
+    const updatedUser = await userService.updateUser(userId, updateData);
+    res.status(200).json({ user: updatedUser });
   } catch (error) {
     next(error);
   }
