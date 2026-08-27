@@ -10,7 +10,8 @@ function MD({ text }) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\[(\d+)\]/g, '<sup class="font-mono text-primary">[$1]</sup>');
+    .replace(/\[(\d+)\]/g, '<sup class="font-mono text-primary">[$1]</sup>')
+    .replace(/\n/g, '<br />');
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -18,6 +19,7 @@ export default function KnowledgePage() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState(null);
   const [uploadMsg, setUploadMsg] = useState('');
+  const [selectedDocs, setSelectedDocs] = useState([]);
   const inputRef = useRef(null);
 
   const { data: docs = [] } = useKbDocs();
@@ -49,11 +51,20 @@ export default function KnowledgePage() {
   const ask = async () => {
     if (!question.trim() || askKb.isPending) return;
     try {
-      const result = await askKb.mutateAsync(question);
+      const result = await askKb.mutateAsync({ 
+        question, 
+        docIds: selectedDocs.length > 0 ? selectedDocs : undefined 
+      });
       setAnswer(result);
     } catch (e) {
       setAnswer({ error: 'Failed to get answer' });
     }
+  };
+
+  const toggleDocSelection = (id) => {
+    setSelectedDocs(prev => 
+      prev.includes(id) ? prev.filter(docId => docId !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -92,7 +103,10 @@ export default function KnowledgePage() {
 
             <div className="mt-8">
               <p className="text-overline">Indexed documents</p>
-              <div className="mt-3 space-y-2">
+              <p className="text-xs text-muted-foreground mt-1 mb-3">
+                Select documents to filter your search, or leave unchecked to search all.
+              </p>
+              <div className="space-y-2">
                 {docs.length === 0 && (
                   <p className="text-xs text-muted-foreground">No documents yet.</p>
                 )}
@@ -102,7 +116,13 @@ export default function KnowledgePage() {
                     className="ps-card-soft p-3 flex items-center justify-between gap-3"
                     data-testid={`doc-${d.id}`}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={selectedDocs.includes(d.id)}
+                        onChange={() => toggleDocSelection(d.id)}
+                        className="w-4 h-4 text-primary bg-background border-border rounded cursor-pointer"
+                      />
                       <FileText size={14} className="shrink-0 text-muted-foreground" />
                       <div className="min-w-0">
                         <div className="text-sm truncate text-foreground">{d.title}</div>

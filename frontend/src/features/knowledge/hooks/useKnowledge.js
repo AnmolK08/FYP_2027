@@ -6,7 +6,7 @@ export function useKbDocs() {
   return useQuery({
     queryKey: ['kbDocs'],
     queryFn: async () => {
-      const data = await api.getDocs();
+      const data = await api.getKbDocs();
       return data.docs;
     },
   });
@@ -14,7 +14,7 @@ export function useKbDocs() {
 
 export function useUploadKbDoc() {
   return useMutation({
-    mutationFn: (file) => api.uploadDoc(file),
+    mutationFn: (file) => api.uploadKbDoc(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kbDocs'] });
     },
@@ -23,7 +23,7 @@ export function useUploadKbDoc() {
 
 export function useDeleteKbDoc() {
   return useMutation({
-    mutationFn: (id) => api.deleteDoc(id),
+    mutationFn: (id) => api.deleteKbDoc(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kbDocs'] });
     },
@@ -32,6 +32,6 @@ export function useDeleteKbDoc() {
 
 export function useAskKb() {
   return useMutation({
-    mutationFn: (question) => api.ask(question),
+    mutationFn: (payload) => api.askKb(payload),
   });
 }

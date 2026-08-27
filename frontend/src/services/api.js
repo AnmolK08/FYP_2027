@@ -96,35 +96,65 @@ export const api = {
 
   // Knowledge
   async getKbDocs() {
-    return apiClient('/knowledge/docs');
+    return apiClient('/knowledge/');
   },
 
   async uploadKbDoc(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/knowledge/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Upload failed');
+    // Extract text content based on file type
+    const ext = file.name.split('.').pop().toLowerCase();
+    let content;
+
+    if (ext === 'docx') {
+      // .docx is a ZIP archive — must use mammoth to extract text
+      const mammoth = await import('mammoth');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      content = result.value;
+    } else if (ext === 'pdf') {
+      // PDF binary — must use pdfjs-dist to extract text
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        pages.push(textContent.items.map((item) => item.str).join(' '));
+      }
+      content = pages.join('\n\n');
+    } else {
+      // Plain text files (.txt, .md) — readAsText is fine
+      content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result || '');
+        reader.onerror = () => reject(new Error('File reading failed'));
+        reader.readAsText(file);
+      });
     }
-    return data;
+
+    // Strip null bytes to prevent PostgreSQL errors
+    content = content.replace(/\0/g, '');
+
+    return apiClient('/knowledge/upload', {
+      method: 'POST',
+      body: {
+        title: file.name,
+        content,
+        filename: file.name,
+        size: file.size,
+      },
+    });
   },
 
   async deleteKbDoc(id) {
-    return apiClient(`/knowledge/docs/${id}`, { method: 'DELETE' });
+    return apiClient(`/knowledge/${id}`, { method: 'DELETE' });
   },
 
-  async askKb(question) {
+  async askKb({ question, docIds }) {
     return apiClient('/knowledge/ask', {
       method: 'POST',
-      body: { question },
+      body: { question, docIds },
     });
   },
 
