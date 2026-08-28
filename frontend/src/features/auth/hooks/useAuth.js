@@ -1,70 +1,39 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { api } from '../../../services/api';
-import { queryClient } from '../../../services/queryClient';
+import { useCurrentUser, USER_QUERY_KEY } from './useCurrentUser';
+import { useLogin } from './useLogin';
+import { useRegister } from './useRegister';
+import { useLogout } from './useLogout';
 
-export function useSession() {
-  return useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      try {
-        const data = await api.getMe();
-        return data.user;
-      } catch (err) {
-        localStorage.removeItem('token');
-        return null;
-      }
-    },
-    staleTime: Infinity, // Don't refetch automatically unless invalidated
-  });
-}
+export { useCurrentUser, useLogin, useRegister, useLogout, USER_QUERY_KEY };
 
+/**
+ * Unified auth facade hook for backward compatibility and clean feature consumption.
+ */
 export function useAuth() {
-  const { data: user, isLoading: loading, refetch: refreshProfile } = useSession();
-
-  const loginMutation = useMutation({
-    mutationFn: ({ email, password }) => api.login(email, password),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-    },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: ({ email, password, name, college, department, leetcodeUsername }) =>
-      api.register(name, email, password, college, department, leetcodeUsername),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        await api.logout();
-      } catch (e) {
-        localStorage.removeItem('token');
-      }
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(['session'], null);
-      localStorage.removeItem('token');
-    },
-  });
+  const { data: user, isLoading: loading, isFetching, refetch: refreshProfile } = useCurrentUser();
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+  const logoutMutation = useLogout();
 
   return {
-    user,
-    profile: user, // Alias for backward compatibility
+    user: user || null,
+    profile: user || null, // Alias for profile data
     loading,
+    isFetching,
+    isAuthenticated: Boolean(user),
     signIn: async (email, password) => {
       const res = await loginMutation.mutateAsync({ email, password });
-      queryClient.setQueryData(['session'], res.user);
-      return { user: res.user, token: res.token };
+      return { user: res.user, token: res.accessToken };
     },
     signUp: async (email, password, name, college, department, leetcodeUsername) => {
-      const res = await registerMutation.mutateAsync({ email, password, name, college, department, leetcodeUsername });
-      queryClient.setQueryData(['session'], res.user);
-      return { user: res.user, token: res.token || res.access_token };
+      const res = await registerMutation.mutateAsync({
+        email,
+        password,
+        name,
+        college,
+        department,
+        leetcodeUsername,
+      });
+      return { user: res.user, token: res.accessToken };
     },
     signOut: async () => {
       await logoutMutation.mutateAsync();
@@ -72,3 +41,5 @@ export function useAuth() {
     refreshProfile,
   };
 }
+
+export default useAuth;

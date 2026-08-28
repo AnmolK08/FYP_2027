@@ -9,38 +9,66 @@ import { connectRedis } from './config/redis.js';
 import { initSyncQueue } from './queues/leetcodeSync.queue.js';
 import { startSyncWorker } from './workers/leetcodeSync.worker.js';
 
-// Load environment variables
 dotenv.config();
 
-// Initialize Express
 const app = express();
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+].filter(Boolean);
 
-// Global Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(helmet()); 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
+    credentials: true, // Allow cookies and auth headers
+  })
+);
 app.use(morgan('dev')); // HTTP request logger
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Register all routes
+// Zero-dependency native cookie parser middleware (avoids docker container dependency caching issues)
+app.use((req, res, next) => {
+  req.cookies = req.cookies || {};
+  if (req.headers.cookie) {
+    req.headers.cookie.split(';').forEach((cookie) => {
+      const parts = cookie.split('=');
+      const key = parts[0]?.trim();
+      const val = parts.slice(1).join('=').trim();
+      if (key) req.cookies[key] = decodeURIComponent(val);
+    });
+  }
+  next();
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use('/api', routes);
 
-// Error Handling Middleware (must be registered last)
 app.use(errorMiddleware);
 
-// Handle server startup
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
 const start = async () => {
   // Connect Redis (non-fatal if unavailable, run in background)
-  connectRedis().catch(err => console.error('Redis init failed:', err));
+  connectRedis().catch((err) => console.error('Redis init failed:', err));
 
   // Initialise BullMQ queue & worker (requires Redis)
   initSyncQueue();
   startSyncWorker();
 
   app.listen(PORT, () => {
-    console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 };
 

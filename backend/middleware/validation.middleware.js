@@ -1,7 +1,3 @@
-/**
- * Middleware for validating incoming request data
- */
-
 export const validateRegistration = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -11,9 +7,7 @@ export const validateRegistration = (req, res, next) => {
       message: 'Email and password are required' 
     });
   }
-
-  // Add more robust validation using libraries like Joi or Zod
-  
+    
   next();
 };
 

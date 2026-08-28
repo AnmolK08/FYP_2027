@@ -4,11 +4,13 @@ import { authenticate } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Public routes
+// Public auth routes
 router.post('/register', authController.signup);
 router.post('/login', authController.login);
+router.post('/refresh', authController.refresh);
+router.post('/logout', authController.logout);
 
-// Protected routes
+// Protected auth routes
 router.get('/me', authenticate, authController.getMe);
 router.put('/profile', authenticate, authController.updateProfile);
 

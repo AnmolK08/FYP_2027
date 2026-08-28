@@ -3,30 +3,21 @@ import { apiClient, API_BASE_URL } from './apiClient';
 export const api = {
   // Auth
   async register(name, email, password, college, department, leetcodeUsername) {
-    const data = await apiClient('/auth/register', {
+    return apiClient('/auth/register', {
       method: 'POST',
-      body: { name, email, password, college, department, leetcode_handle: leetcodeUsername },
+      body: { name, email, password, college, department, leetcodeUsername },
     });
-    if (data.token || data.access_token) {
-      localStorage.setItem('token', data.token || data.access_token);
-    }
-    return data;
   },
 
   async login(email, password) {
-    const data = await apiClient('/auth/login', {
+    return apiClient('/auth/login', {
       method: 'POST',
       body: { email, password },
     });
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-    }
-    return data;
   },
 
   async logout() {
-    await apiClient('/auth/logout', { method: 'POST' });
-    localStorage.removeItem('token');
+    return apiClient('/auth/logout', { method: 'POST' });
   },
 
   async getMe() {

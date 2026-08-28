@@ -1,9 +1,3 @@
-/**
- * Global Error Handling Middleware
- * - Catches all errors thrown in the application
- * - Formats the error response consistently
- */
-
 export const errorMiddleware = (err, req, res, next) => {
   console.error(`[Error] ${err.message}`);
   console.error(err.stack);
