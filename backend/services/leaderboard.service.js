@@ -47,57 +47,55 @@ export const getLeaderboard = async (page = 1, limit = 20, requestingUserId = nu
   // 1- fetching from Redis first
   if (isRedisReady()) {
     try {
-      const total = await redisClient.zCard(leaderboardKey());
+      let total = await redisClient.zCard(leaderboardKey());
 
       if (total === 0) {
-        console.log('[Leaderboard] ZSET is empty, triggering background rebuild...');
-        rebuildLeaderboard().catch(err => console.error('[Leaderboard] Background rebuild failed:', err.message));
-        // Fall through to DB fallback for this immediate request
-      } else {
-        // ZREVRANGE with scores — returns [{value, score}, ...]
-        const entries = await redisClient.zRangeWithScores(
-          leaderboardKey(),
-          start,
-          stop,
-          { REV: true }
-        );
+        console.log('[Leaderboard] ZSET is empty, rebuilding from PostgreSQL...');
+        await rebuildLeaderboard();
+        total = await redisClient.zCard(leaderboardKey());
+      }
 
-        if (entries && entries.length > 0) {
-          const userIds = entries.map((e) => e.value);
-          const profiles = await batchFetchProfiles(userIds);
+      // ZREVRANGE with scores — returns [{value, score}, ...]
+      const entries = await redisClient.zRangeWithScores(
+        leaderboardKey(),
+        start,
+        stop,
+        { REV: true }
+      );
 
-          const users = entries.map((entry, index) => {
-            const profile = profiles.get(entry.value) || {};
-            return {
-              rank: start + index + 1,
-              userId: entry.value,
-              name: profile.name || 'Unknown',
-              avatar: profile.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name || 'U'}`,
-              college: profile.college || null,
-              department: profile.department || null,
-              leetcodeUsername: profile.leetcodeUsername || null,
-              totalSolved: profile.leetcodeStats?.totalSolved || 0,
-              easy: profile.leetcodeStats?.easy || 0,
-              medium: profile.leetcodeStats?.medium || 0,
-              hard: profile.leetcodeStats?.hard || 0,
-              contestRating: profile.leetcodeStats?.contestRating || 0,
-              universalScore: entry.score,
-              is_me: entry.value === requestingUserId,
-            };
-          });
+      if (entries && entries.length > 0) {
+        const userIds = entries.map((e) => e.value);
+        const profiles = await batchFetchProfiles(userIds);
 
-          // Get total count for pagination metadata
-          const total = await redisClient.zCard(leaderboardKey());
-          console.log("return leaderboard data from redis")
-
+        const users = entries.map((entry, index) => {
+          const profile = profiles.get(entry.value) || {};
           return {
-            users,
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
+            rank: start + index + 1,
+            userId: entry.value,
+            name: profile.name || 'Unknown',
+            avatar: profile.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${profile.name || 'U'}`,
+            college: profile.college || null,
+            department: profile.department || null,
+            leetcodeUsername: profile.leetcodeUsername || null,
+            totalSolved: profile.leetcodeStats?.totalSolved || 0,
+            easy: profile.leetcodeStats?.easy || 0,
+            medium: profile.leetcodeStats?.medium || 0,
+            hard: profile.leetcodeStats?.hard || 0,
+            contestRating: profile.leetcodeStats?.contestRating || 0,
+            universalScore: entry.score,
+            is_me: entry.value === requestingUserId,
           };
-        }
+        });
+
+        console.log('return leaderboard data from redis');
+
+        return {
+          users,
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        };
       }
     } catch (err) {
       console.error('[Leaderboard] Redis read failed, falling back to PostgreSQL:', err.message);
@@ -112,9 +110,17 @@ export const getLeaderboard = async (page = 1, limit = 20, requestingUserId = nu
 export const getUserRank = async (userId) => {
   if (isRedisReady()) {
     try {
-      // ZREVRANK is 0-based
-      const rank = await redisClient.zRevRank(leaderboardKey(), userId);
-      const score = await redisClient.zScore(leaderboardKey(), userId);
+      let rank = await redisClient.zRevRank(leaderboardKey(), userId);
+      let score = await redisClient.zScore(leaderboardKey(), userId);
+
+      if (rank === null || rank === undefined) {
+        const total = await redisClient.zCard(leaderboardKey());
+        if (total === 0) {
+          await rebuildLeaderboard();
+          rank = await redisClient.zRevRank(leaderboardKey(), userId);
+          score = await redisClient.zScore(leaderboardKey(), userId);
+        }
+      }
 
       if (rank !== null && rank !== undefined) {
         return {
@@ -132,58 +138,62 @@ export const getUserRank = async (userId) => {
   return await getUserRankFromDatabase(userId);
 };
 
+let rebuildInFlight = null;
+
 // rebuild the entire global leaderboard from PostgreSQL.
-// Uses a temp key + RENAME for atomic replacement so reads aren't
-// interrupted during the rebuild.
+// Uses a unique temp key + single-flight deduplication + RENAME for atomic replacement.
 export const rebuildLeaderboard = async () => {
-  const stats = await prisma.leetcodeStats.findMany({
-    where: { universalScore: { gt: 0 } },
-    select: {
-      userId: true,
-      universalScore: true,
-    },
-  });
-
-  if (stats.length === 0) {
-    console.log('[Leaderboard] No stats to rebuild from');
-    return { rebuilt: 0 };
+  if (rebuildInFlight) {
+    return rebuildInFlight;
   }
 
-  if (!isRedisReady()) {
-    console.warn('[Leaderboard] Cannot rebuild — Redis is unavailable');
-    return { rebuilt: 0, error: 'Redis unavailable' };
-  }
-
-  const tempKey = leaderboardTempKey();
-  const targetKey = leaderboardKey();
-
-  try {
-    // Delete any stale temp key
-    await redisClient.del(tempKey);
-
-    // Batch ZADD into the temp key (100 at a time)
-    const BATCH_SIZE = 100;
-    for (let i = 0; i < stats.length; i += BATCH_SIZE) {
-      const batch = stats.slice(i, i + BATCH_SIZE).map((s) => ({
-        score: s.universalScore,
-        value: s.userId,
-      }));
-      await redisClient.zAdd(tempKey, batch);
-    }
-
-    // Atomic swap: RENAME temp → target
-    await redisClient.rename(tempKey, targetKey);
-
-    console.log(`[Leaderboard] Rebuilt with ${stats.length} users`);
-    return { rebuilt: stats.length };
-  } catch (err) {
-    console.error('[Leaderboard] Rebuild failed:', err.message);
-    // Clean up temp key on failure
+  rebuildInFlight = (async () => {
     try {
-      await redisClient.del(tempKey);
-    } catch { /* ignore */ }
-    throw err;
-  }
+      const stats = await prisma.leetcodeStats.findMany({
+        where: { universalScore: { gt: 0 } },
+        select: {
+          userId: true,
+          universalScore: true,
+        },
+      });
+
+      if (stats.length === 0) {
+        console.log('[Leaderboard] No stats to rebuild from');
+        return { rebuilt: 0 };
+      }
+
+      if (!isRedisReady()) {
+        console.warn('[Leaderboard] Cannot rebuild — Redis is unavailable');
+        return { rebuilt: 0, error: 'Redis unavailable' };
+      }
+
+      const tempKey = `${leaderboardTempKey()}:${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const targetKey = leaderboardKey();
+
+      // Batch ZADD into unique temp key (100 at a time)
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < stats.length; i += BATCH_SIZE) {
+        const batch = stats.slice(i, i + BATCH_SIZE).map((s) => ({
+          score: s.universalScore,
+          value: s.userId,
+        }));
+        await redisClient.zAdd(tempKey, batch);
+      }
+
+      // Atomic swap: RENAME unique temp -> target
+      await redisClient.rename(tempKey, targetKey);
+
+      console.log(`[Leaderboard] Rebuilt with ${stats.length} users`);
+      return { rebuilt: stats.length };
+    } catch (err) {
+      console.error('[Leaderboard] Rebuild failed:', err.message);
+      throw err;
+    } finally {
+      rebuildInFlight = null;
+    }
+  })();
+
+  return rebuildInFlight;
 };
 
 // Batch fetch user profiles from PostgreSQL
@@ -234,6 +244,11 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
       select: {
         userId: true,
         universalScore: true,
+        totalSolved: true,
+        easy: true,
+        medium: true,
+        hard: true,
+        contestRating: true,
         user: {
           select: {
             name: true,
@@ -241,15 +256,6 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
             college: true,
             department: true,
             leetcodeUsername: true,
-            leetcodeStats: {
-              select: {
-                totalSolved: true,
-                easy: true,
-                medium: true,
-                hard: true,
-                contestRating: true,
-              },
-            },
           },
         },
       },
@@ -267,11 +273,11 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
     college: entry.user?.college || null,
     department: entry.user?.department || null,
     leetcodeUsername: entry.user?.leetcodeUsername || null,
-    totalSolved: entry.user?.leetcodeStats?.totalSolved || 0,
-    easy: entry.user?.leetcodeStats?.easy || 0,
-    medium: entry.user?.leetcodeStats?.medium || 0,
-    hard: entry.user?.leetcodeStats?.hard || 0,
-    contestRating: entry.user?.leetcodeStats?.contestRating || 0,
+    totalSolved: entry.totalSolved || 0,
+    easy: entry.easy || 0,
+    medium: entry.medium || 0,
+    hard: entry.hard || 0,
+    contestRating: entry.contestRating || 0,
     universalScore: entry.universalScore,
     is_me: entry.userId === requestingUserId,
   }));

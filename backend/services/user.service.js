@@ -39,17 +39,32 @@ export const createUser = async (userData) => {
 };
 
 export const updateUser = async (id, updateData) => {
-  // 1. Verify user exists
-  await findUserById(id); // Will throw if not found
+  const { name, college, department, leetcodeUsername, dailyGoal } = updateData;
 
-  // 2. Update user
+  // 1. Update user
   const user = await prisma.user.update({
     where: { id },
-    data: updateData,
-    select: { id: true, email: true, name: true, updatedAt: true },
+    data: {
+      name: name || undefined,
+      college: college !== undefined ? college : undefined,
+      department: department !== undefined ? department : undefined,
+      leetcodeUsername: leetcodeUsername !== undefined ? leetcodeUsername : undefined,
+      dailyGoal: dailyGoal !== undefined ? dailyGoal : undefined,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      college: true,
+      department: true,
+      leetcodeUsername: true,
+      avatar: true,
+      dailyGoal: true,
+      updatedAt: true,
+    },
   });
 
-  // 3. Invalidate dashboard cache
+  // 2. Invalidate dashboard cache
   await invalidateDashboardCache(id);
 
   return user;

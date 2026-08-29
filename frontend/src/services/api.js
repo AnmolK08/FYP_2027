@@ -189,8 +189,16 @@ export const api = {
     return apiClient('/resume/roles');
   },
 
+  async getRoles() {
+    return apiClient('/resume/roles');
+  },
+
   // System Design
   async getSdTopics() {
+    return apiClient('/sd/topics');
+  },
+
+  async getTopics() {
     return apiClient('/sd/topics');
   },
 

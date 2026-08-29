@@ -59,7 +59,6 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
   if (relevantResults.length === 0) {
     return {
       answer: "I couldn't find enough relevant information in your uploaded documents to answer that question.",
-      citations: [],
       metadata: {
         chunksRetrieved: results.length,
         chunksUsed: 0,
@@ -74,12 +73,8 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
   // Generate answer via Gemini
   const answer = await generateAnswer(contextBlock, trimmedQuestion);
 
-  // Build citations 
-  const citations = createCitations(relevantResults);
-
   return {
     answer,
-    citations,
     metadata: {
       chunksRetrieved: results.length,
       chunksUsed: relevantResults.length,

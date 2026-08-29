@@ -127,7 +127,7 @@ export default function KnowledgePage() {
                       <div className="min-w-0">
                         <div className="text-sm truncate text-foreground">{d.title}</div>
                         <div className="text-[10px] font-mono-display text-muted-foreground">
-                          {d.n_chunks || 0} chunks - {((d.size || 0) / 1024).toFixed(0)}KB
+                          {d.nChunks ?? d.n_chunks ?? 0} chunks - {((d.size || 0) / 1024).toFixed(0)}KB
                         </div>
                       </div>
                     </div>
@@ -181,18 +181,6 @@ export default function KnowledgePage() {
                     <div className="mt-3 leading-relaxed">
                       <MD text={answer.answer || ''} />
                     </div>
-                    {answer.citations && answer.citations.length > 0 && (
-                      <div className="mt-6 border-t border-border pt-4">
-                        <p className="text-overline">Sources</p>
-                        <ol className="mt-2 text-sm text-muted-foreground space-y-1">
-                          {answer.citations.map((c) => (
-                            <li key={c.n}>
-                              <span className="font-mono text-primary">[{c.n}]</span> {c.title} - chunk {c.chunk}
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
                   </>
                 )}
               </div>

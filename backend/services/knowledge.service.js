@@ -13,6 +13,14 @@ export const getKnowledgeDocs = async (userId) => {
   return await prisma.knowledgeDoc.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      filename: true,
+      size: true,
+      nChunks: true,
+      createdAt: true,
+    },
   });
 };
 
@@ -82,7 +90,15 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
     }
   }
 
-  return { ...doc, indexingStatus };
+  return {
+    id: doc.id,
+    title: doc.title,
+    filename: doc.filename,
+    size: doc.size,
+    nChunks: doc.nChunks,
+    createdAt: doc.createdAt,
+    indexingStatus,
+  };
 };
 
 // Delete a knowledge document and its associated vectors.

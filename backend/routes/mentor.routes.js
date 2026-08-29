@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/sessions', mentorController.getSessions);
 router.get('/messages/:sessionId', mentorController.getMessages);
+router.get('/history/:sessionId', mentorController.getMessages);
 router.post('/chat', mentorController.chat);
 router.post('/weakness-plan', mentorController.getWeaknessPlan);
 

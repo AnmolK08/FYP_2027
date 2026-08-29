@@ -64,16 +64,6 @@ export const buildDashboardDTO = async (userId) => {
           lastSynced: true,
         },
       },
-      activities: {
-        orderBy: { date: 'desc' },
-        take: 30,
-        select: {
-          date: true,
-          checkedIn: true,
-          synced: true,
-          solvedSnapshot: true,
-        },
-      },
     },
   });
 
@@ -111,7 +101,6 @@ export const buildDashboardDTO = async (userId) => {
       submissionCalendar: stats.submissionCalendar || {},
       lastSynced: stats.lastSynced || null,
     },
-    activity: user.activities,
   };
 };
 

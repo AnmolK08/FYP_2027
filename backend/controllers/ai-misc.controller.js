@@ -16,7 +16,7 @@ export const predictContest = (req, res, next) => {
 export const getFlashcards = (req, res, next) => {
   try {
     const cards = aiMiscService.getFlashcards();
-    res.json({ cards });
+    res.json({ cards, flashcards: cards });
   } catch (error) {
     next(error);
   }

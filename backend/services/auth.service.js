@@ -8,6 +8,20 @@ import {
   verifyRefreshToken,
 } from '../utils/token.js';
 
+const sanitizeUser = (user) => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    college: user.college || null,
+    department: user.department || null,
+    leetcodeUsername: user.leetcodeUsername || null,
+    avatar: user.avatar || null,
+    dailyGoal: user.dailyGoal ?? 3,
+  };
+};
+
 export const refreshSession = async (rawRefreshToken) => {
   if (!rawRefreshToken) {
     const error = new Error('Refresh token is required');
@@ -39,12 +53,10 @@ export const refreshSession = async (rawRefreshToken) => {
   const accessToken = generateAccessToken(user);
   const newRefreshToken = generateRefreshToken(user);
 
-  const { password: _, ...sanitizedUser } = user;
-
   return {
     accessToken,
     newRefreshToken,
-    user: sanitizedUser,
+    user: sanitizeUser(user),
   };
 };
 
@@ -86,10 +98,8 @@ export const registerUser = async (userData) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  const { password: _, ...userWithoutPassword } = user;
-
   return {
-    user: userWithoutPassword,
+    user: sanitizeUser(user),
     accessToken,
     refreshToken,
   };
@@ -119,10 +129,8 @@ export const loginUser = async (credentials) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  const { password: _, ...userWithoutPassword } = user;
-
   return {
-    user: userWithoutPassword,
+    user: sanitizeUser(user),
     accessToken,
     refreshToken,
   };
@@ -139,8 +147,7 @@ export const getUserById = async (id) => {
     throw error;
   }
 
-  const { password: _, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  return sanitizeUser(user);
 };
 
 export const updateUserProfile = async (id, updateData) => {
@@ -157,8 +164,6 @@ export const updateUserProfile = async (id, updateData) => {
     },
   });
 
-  const { password: _, ...userWithoutPassword } = user;
   await invalidateDashboardCache(id);
-
-  return userWithoutPassword;
+  return sanitizeUser(user);
 };

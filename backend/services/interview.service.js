@@ -2,30 +2,68 @@ import { v4 as uuidv4 } from 'uuid';
 import prisma from '../config/prisma.js';
 
 export const getInterviews = async (userId) => {
-  return await prisma.mockInterview.findMany({
+  const interviews = await prisma.mockInterview.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
     take: 10,
+    select: {
+      id: true,
+      type: true,
+      problemTitle: true,
+      language: true,
+      durationMinutes: true,
+      status: true,
+      score: true,
+      startedAt: true,
+      completedAt: true,
+      createdAt: true,
+    },
   });
+
+  return interviews.map((item) => ({
+    ...item,
+    problem_title: item.problemTitle,
+    duration_minutes: item.durationMinutes,
+    started_at: item.startedAt,
+    completed_at: item.completedAt,
+    created_at: item.createdAt,
+  }));
 };
 
 export const createInterview = async (userId, interviewData) => {
-  const { type, problemTitle, problemDescription, starterCode, language, durationMinutes } = interviewData;
+  const {
+    type,
+    problemTitle,
+    problem_title,
+    problemDescription,
+    problem_description,
+    starterCode,
+    starter_code,
+    language,
+    durationMinutes,
+    duration_minutes,
+  } = interviewData;
 
-  return await prisma.mockInterview.create({
+  const created = await prisma.mockInterview.create({
     data: {
       id: uuidv4(),
       userId,
       type: type || 'coding',
-      problemTitle,
-      problemDescription,
-      starterCode,
+      problemTitle: problemTitle || problem_title,
+      problemDescription: problemDescription || problem_description,
+      starterCode: starterCode || starter_code,
       language: language || 'javascript',
-      durationMinutes: durationMinutes || 30,
+      durationMinutes: durationMinutes || duration_minutes || 30,
       status: 'in_progress',
       startedAt: new Date(),
     },
   });
+
+  return {
+    ...created,
+    problem_title: created.problemTitle,
+    duration_minutes: created.durationMinutes,
+  };
 };
 
 export const updateInterview = async (userId, interviewId, updateData) => {

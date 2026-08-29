@@ -6,6 +6,12 @@ export const getUserActivity = async (userId) => {
   return await prisma.activity.findMany({
     where: { userId },
     orderBy: { date: 'asc' },
+    select: {
+      date: true,
+      checkedIn: true,
+      synced: true,
+      solvedSnapshot: true,
+    },
   });
 };
 
@@ -22,6 +28,10 @@ export const getUserStreakSummary = async (userId) => {
     prisma.activity.findMany({
       where: { userId },
       orderBy: { date: 'asc' },
+      select: {
+        date: true,
+        checkedIn: true,
+      },
     }),
   ]);
 

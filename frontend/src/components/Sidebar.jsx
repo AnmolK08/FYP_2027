@@ -21,7 +21,7 @@ import {
 const mainNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { href: '/mentor', label: 'AI Mentor', icon: Brain, badge: 'new' },
+  { href: '/knowledge', label: 'Knowledge', icon: BookOpen, badge: 'new' },
 ];
 
 const practiceItems = [
@@ -37,7 +37,7 @@ const careerItems = [
 ];
 
 const learningItems = [
-  { href: '/knowledge', label: 'Knowledge', icon: BookOpen, badge: 'new' },
+  { href: '/mentor', label: 'AI Mentor', icon: Brain, badge: 'new' },
   { href: '/streaks', label: 'Streaks', icon: Flame },
   { href: '/tracks', label: 'Learning Tracks', icon: Map },
 ];

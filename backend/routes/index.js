@@ -13,6 +13,10 @@ import leetcodeRoutes from './leetcode.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import leaderboardRoutes from './leaderboard.routes.js';
 
+import * as interviewController from '../controllers/interview.controller.js';
+import * as aiMiscController from '../controllers/ai-misc.controller.js';
+import { authenticate } from '../middleware/auth.middleware.js';
+
 const router = Router();
 
 // Auth service routes
@@ -28,6 +32,13 @@ router.use('/ai', aiMiscRoutes);
 
 // Interview service routes
 router.use('/interviews', interviewRoutes);
+
+// Direct route aliases for frontend client compatibility
+router.get('/problems', authenticate, interviewController.getProblems);
+router.get('/sd/topics', authenticate, interviewController.getSystemDesignTopics);
+router.get('/system-design', authenticate, interviewController.getSystemDesignTopics);
+router.get('/tracks', authenticate, interviewController.getTracks);
+router.get('/quiz/flashcards', authenticate, aiMiscController.getFlashcards);
 
 // Leetcode service routes
 router.use('/leetcode', leetcodeRoutes);

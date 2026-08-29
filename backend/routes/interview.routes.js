@@ -10,6 +10,9 @@ router.use(authenticate);
 router.get('/mock', interviewController.getInterviews);
 router.post('/mock', interviewController.createInterview);
 router.put('/mock/:id', interviewController.updateInterview);
+router.get('/', interviewController.getInterviews);
+router.post('/', interviewController.createInterview);
+router.put('/:id', interviewController.updateInterview);
 
 // Problems
 router.get('/problems', interviewController.getProblems);
