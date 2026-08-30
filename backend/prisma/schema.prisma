@@ -29,6 +29,7 @@ model User {
   chatMessages       ChatMessage[]
   knowledgeDocs      KnowledgeDoc[]
   mockInterviews     MockInterview[]
+  flashcards         Flashcard[]
 
   @@map("users")
 }
@@ -97,7 +98,9 @@ model KnowledgeDoc {
   nChunks   Int      @default(0) @map("n_chunks")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcards Flashcard[]
+
   @@map("knowledge_docs")
 }
 
@@ -121,4 +124,24 @@ model MockInterview {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("mock_interviews")
 }
+
+model Flashcard {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  documentId  String   @map("document_id")
+  question    String   @db.Text
+  answer      String   @db.Text
+  difficulty  String   @default("medium")
+  sourceChunk Int?     @map("source_chunk")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document KnowledgeDoc @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([documentId])
+  @@map("flashcards")
+}
+
 

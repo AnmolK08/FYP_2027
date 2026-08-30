@@ -215,8 +215,36 @@ export const api = {
   },
 
   // Flashcards
-  async getFlashcards() {
-    return apiClient('/quiz/flashcards');
+  async getFlashcards(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.documentId) searchParams.set('documentId', params.documentId);
+    if (params.difficulty && params.difficulty !== 'all') searchParams.set('difficulty', params.difficulty);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient(`/flashcards${query}`);
+  },
+
+  async getFlashcardById(id) {
+    return apiClient(`/flashcards/${id}`);
+  },
+
+  async generateFlashcards(documentId, body = { count: 10, difficulty: 'mixed' }) {
+    return apiClient(`/flashcards/generate/${documentId}`, {
+      method: 'POST',
+      body,
+    });
+  },
+
+  async deleteFlashcard(id) {
+    return apiClient(`/flashcards/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async reviewFlashcard(id, rating) {
+    return apiClient(`/flashcards/${id}/review`, {
+      method: 'POST',
+      body: { rating },
+    });
   },
 
   // Tracks

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useKbDocs, useUploadKbDoc, useDeleteKbDoc, useAskKb } from '../../features/knowledge/hooks/useKnowledge';
-import { Upload, FileText, Trash2, Send, Loader2 } from 'lucide-react';
+import { Upload, FileText, Trash2, Send, Loader2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 function MD({ text }) {
@@ -131,13 +131,23 @@ export default function KnowledgePage() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      data-testid={`delete-${d.id}`}
-                      onClick={() => remove(d.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <a
+                        href={`/flashcards?documentId=${d.id}`}
+                        title="Study & Generate Flashcards"
+                        className="text-muted-foreground hover:text-primary p-1 rounded transition-colors"
+                      >
+                        <Zap size={14} />
+                      </a>
+                      <button
+                        data-testid={`delete-${d.id}`}
+                        onClick={() => remove(d.id)}
+                        className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
+                        title="Delete Document"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

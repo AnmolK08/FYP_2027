@@ -9,6 +9,7 @@ import knowledgeRoutes from './knowledge.routes.js';
 import mentorRoutes from './mentor.routes.js';
 import aiMiscRoutes from './ai-misc.routes.js';
 import interviewRoutes from './interview.routes.js';
+import flashcardRoutes from './flashcard.routes.js';
 import leetcodeRoutes from './leetcode.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import leaderboardRoutes from './leaderboard.routes.js';
@@ -29,6 +30,7 @@ router.use('/resume', resumeRoutes);
 router.use('/knowledge', knowledgeRoutes);
 router.use('/mentor', mentorRoutes);
 router.use('/ai', aiMiscRoutes);
+router.use('/flashcards', flashcardRoutes);
 
 // Interview service routes
 router.use('/interviews', interviewRoutes);
