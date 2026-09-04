@@ -13,7 +13,6 @@ import {
   Trophy,
   Timer,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const PROBLEMS = [
   {
@@ -148,7 +147,6 @@ export default function InterviewPage() {
             completed_at: new Date().toISOString(),
           },
         });
-        toast.success(abandoned ? 'Interview ended' : `Interview completed! Score: ${score}%`);
       } catch (e) {
         console.error('Error finishing interview:', e);
       }

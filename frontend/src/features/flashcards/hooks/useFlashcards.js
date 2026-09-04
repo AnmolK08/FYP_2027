@@ -22,12 +22,20 @@ export function useFlashcards(documentId, difficulty) {
 export function useDeleteFlashcard() {
   return useMutation({
     mutationFn: (id) => api.deleteFlashcard(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      toast.success('Flashcard deleted');
+    onMutate: () => {
+      const toastId = toast.loading('Deleting flashcard...');
+      return { toastId };
     },
-    onError: (err) => {
-      toast.error(err.message || 'Failed to delete flashcard');
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      toast.success(data?.message || 'Flashcard deleted successfully', {
+        id: context?.toastId,
+      });
+    },
+    onError: (err, variables, context) => {
+      toast.error(err.message || 'Failed to delete flashcard', {
+        id: context?.toastId,
+      });
     },
   });
 }

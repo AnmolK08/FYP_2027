@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { useUpdateProfile } from '../hooks/useUserStats';
 import { createPortal } from 'react-dom';
@@ -33,11 +32,10 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
     setSaving(true);
     try {
       await updateProfileMutation.mutateAsync(form);
-      toast.success('Profile updated');
       onOpenChange(false);
       onSaved?.();
     } catch (e) {
-      toast.error('Update failed');
+      // Error is handled in useUpdateProfile toast notification
     } finally {
       setSaving(false);
     }

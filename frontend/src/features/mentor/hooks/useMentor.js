@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
+import { toast } from 'sonner';
 
 export function useChatSessions() {
   return useQuery({
@@ -30,11 +31,28 @@ export function useSendChatMessage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chatSessions'] });
     },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to send message');
+    },
   });
 }
 
 export function useGenerateWeaknessPlan() {
   return useMutation({
     mutationFn: () => api.generateWeaknessPlan(),
+    onMutate: () => {
+      const toastId = toast.loading('Analyzing weaknesses and generating study plan...');
+      return { toastId };
+    },
+    onSuccess: (data, variables, context) => {
+      toast.success(data?.message || 'Custom study plan generated!', {
+        id: context?.toastId,
+      });
+    },
+    onError: (err, variables, context) => {
+      toast.error(err.message || 'Failed to generate study plan. Make sure LeetCode is synced.', {
+        id: context?.toastId,
+      });
+    },
   });
 }

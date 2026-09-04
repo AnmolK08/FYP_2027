@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useKbDocs, useUploadKbDoc, useDeleteKbDoc, useAskKb } from '../../features/knowledge/hooks/useKnowledge';
 import { Upload, FileText, Trash2, Send, Loader2, Zap } from 'lucide-react';
-import { toast } from 'sonner';
 
 function MD({ text }) {
   const html = (text || '')
@@ -42,9 +41,8 @@ export default function KnowledgePage() {
   const remove = async (id) => {
     try {
       await deleteKbDoc.mutateAsync(id);
-      toast.success('Document deleted');
     } catch (e) {
-      toast.error('Delete failed');
+      // Error toast is handled in useDeleteKbDoc hook
     }
   };
 

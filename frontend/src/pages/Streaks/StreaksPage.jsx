@@ -3,7 +3,6 @@ import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useCheckIn, useStreakSummary } from '../../features/profile/hooks/useUserStats';
 import { Button } from '@/components/ui/button';
 import { Flame, Target, Check, Trophy } from 'lucide-react';
-import { toast } from 'sonner';
 
 export default function StreaksPage() {
   const { data, isLoading: loading } = useStreakSummary();
@@ -54,9 +53,8 @@ const calendar = useMemo(() => {
   const handleCheckin = async () => {
     try {
       await checkIn.mutateAsync();
-      toast.success('Checked in for today!');
     } catch (e) {
-      toast.error('Check-in failed');
+      // Error toast is handled in useCheckIn hook
     }
   };
 

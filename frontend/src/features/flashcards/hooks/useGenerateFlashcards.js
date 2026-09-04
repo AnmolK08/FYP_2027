@@ -14,16 +14,22 @@ export function useGenerateFlashcards() {
       }
       return await api.generateFlashcards(documentId, { count, difficulty });
     },
-    onSuccess: (data, variables) => {
+    onMutate: () => {
+      const toastId = toast.loading('Generating flashcards...');
+      return { toastId };
+    },
+    onSuccess: (data, variables, context) => {
       // Invalidate both general flashcards cache and document-specific query cache
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['flashcards', variables.documentId] });
-      toast.success(
-        `Generated ${data?.count || data?.flashcards?.length || 0} flashcards successfully!`
-      );
+      const count = data?.count || data?.flashcards?.length || 0;
+      const msg = data?.message || `Generated ${count} flashcard${count === 1 ? '' : 's'} successfully!`;
+      toast.success(msg, { id: context?.toastId });
     },
-    onError: (err) => {
-      toast.error(err.message || 'Failed to generate flashcards. Please try again.');
+    onError: (err, variables, context) => {
+      toast.error(err.message || 'Failed to generate flashcards. Please try again.', {
+        id: context?.toastId,
+      });
     },
   });
 }

@@ -70,9 +70,8 @@ export default function DashboardPage() {
     }
     try {
       await syncLeetCode.mutateAsync();
-      toast.success('LeetCode profile sync queued. Data will update shortly.');
     } catch (e) {
-      toast.error('Sync failed');
+      // Handled in useSyncLeetCode toast notification
     }
   };
 

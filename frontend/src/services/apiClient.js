@@ -116,13 +116,43 @@ export async function apiClient(endpoint, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(data?.error || data?.message || 'Request failed');
+    let message = 'Request failed';
+    if (typeof data?.error === 'string') {
+      message = data.error;
+    } else if (typeof data?.error?.message === 'string') {
+      message = data.error.message;
+    } else if (typeof data?.message === 'string') {
+      message = data.message;
+    } else if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      message = data.errors
+        .map((e) => (typeof e === 'string' ? e : e.msg || e.message || JSON.stringify(e)))
+        .join(', ');
+    } else if (typeof data === 'string') {
+      message = data;
+    }
+
+    const error = new Error(message);
     error.status = response.status;
     error.data = data;
     throw error;
   }
 
   return data;
+}
+
+export function extractErrorMessage(error, fallback = 'An unexpected error occurred') {
+  if (!error) return fallback;
+  if (typeof error === 'string') return error;
+  if (typeof error.message === 'string' && error.message !== '[object Object]') return error.message;
+  if (typeof error.data?.error === 'string') return error.data.error;
+  if (typeof error.data?.error?.message === 'string') return error.data.error.message;
+  if (typeof error.data?.message === 'string') return error.data.message;
+  if (Array.isArray(error.data?.errors) && error.data.errors.length > 0) {
+    return error.data.errors
+      .map((e) => (typeof e === 'string' ? e : e.msg || e.message || JSON.stringify(e)))
+      .join(', ');
+  }
+  return fallback;
 }
 
 export default apiClient;
