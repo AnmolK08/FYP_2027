@@ -1,6 +1,7 @@
 import { tokenStore } from './tokenStore';
 
-export const API_BASE_URL = 'http://localhost:8000/api';
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export const API_BASE_URL = RAW_API_URL.replace(/\/+$/, '');
 
 // Shared in-flight refresh promise to prevent multiple simultaneous refresh requests
 let refreshPromise = null;

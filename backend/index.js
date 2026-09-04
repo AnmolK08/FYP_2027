@@ -12,20 +12,37 @@ import { startSyncWorker } from './workers/leetcodeSync.worker.js';
 dotenv.config();
 
 const app = express();
+
+// Trust reverse proxy for secure cookies on Vercel/proxies
+app.set('trust proxy', 1);
+
+const rawFrontendUrls = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((u) => u.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  ...rawFrontendUrls,
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:3000',
-].filter(Boolean);
+].map((url) => url.replace(/\/+$/, ''));
 
 app.use(helmet()); 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+
+      const cleanOrigin = origin.replace(/\/+$/, '');
+      const isAllowed =
+        allowedOrigins.includes(cleanOrigin) ||
+        (process.env.NODE_ENV !== 'production' && cleanOrigin.startsWith('http://localhost')) ||
+        /https:\/\/[a-z0-9-]+\.vercel\.app$/.test(cleanOrigin);
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
@@ -53,6 +70,20 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check endpoints
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'PrepSphere API is running' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    serverless: Boolean(process.env.VERCEL),
+  });
+});
+
 app.use('/api', routes);
 
 app.use(errorMiddleware);
@@ -72,7 +103,15 @@ const start = async () => {
   });
 };
 
-start().catch((err) => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (!process.env.VERCEL) {
+  start().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+} else {
+  // In Vercel serverless environment, connect to Redis and init queue if configured
+  connectRedis().catch((err) => console.error('Redis init failed:', err));
+  initSyncQueue();
+}
+
+export default app;
