@@ -3,8 +3,10 @@ import { addSyncJob, isQueueReady } from '../queues/leetcodeSync.queue.js';
 
 export const syncStats = async (req, res, next) => {
   try {
-    // Prefer async queue if available
-    if (isQueueReady()) {
+    const isServerless = Boolean(process.env.VERCEL);
+
+    // Prefer async queue only in persistent container environments where a BullMQ worker runs
+    if (!isServerless && isQueueReady()) {
       const result = await addSyncJob(req.user.id);
 
       if (result.queued) {
@@ -23,9 +25,13 @@ export const syncStats = async (req, res, next) => {
       }
     }
 
-    // Fallback: synchronous sync
+    // Direct synchronous sync (required on Vercel Serverless or when queue is unavailable)
     const stats = await leetcodeService.syncLeetcodeStats(req.user.id);
-    res.json({ stats });
+    res.json({
+      status: 'completed',
+      message: 'LeetCode profile synced successfully',
+      stats,
+    });
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ error: error.message });

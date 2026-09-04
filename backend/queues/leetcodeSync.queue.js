@@ -14,8 +14,8 @@ let syncQueue = null;
 // Call after Redis is connected.
 export const initSyncQueue = () => {
   const redisUrl = getRedisUrl();
-  if (!redisUrl) {
-    console.warn('[SyncQueue] No REDIS_URL — queue unavailable');
+  if (!redisUrl || (process.env.VERCEL && redisUrl.includes('localhost'))) {
+    console.warn('[SyncQueue] No valid remote REDIS_URL — queue unavailable');
     return;
   }
 

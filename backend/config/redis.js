@@ -8,13 +8,22 @@ let ready = false;
 export const isRedisReady = () => ready;
 
 export const connectRedis = async () => {
-  if (!REDIS_URL) {
-    console.warn('[Redis] REDIS_URL is not set — running without Redis cache');
+  if (!REDIS_URL || (process.env.VERCEL && REDIS_URL.includes('localhost'))) {
+    console.warn('[Redis] REDIS_URL is not set or points to localhost in serverless — running without Redis cache');
     return;
   }
 
   try {
-    redisClient = createClient({ url: REDIS_URL });
+    redisClient = createClient({
+      url: REDIS_URL,
+      socket: {
+        connectTimeout: 4000,
+        reconnectStrategy: (retries) => {
+          if (retries > 2) return new Error('Redis connection retry limit reached');
+          return Math.min(retries * 100, 1000);
+        },
+      },
+    });
 
     redisClient.on('error', (err) => {
       ready = false;
