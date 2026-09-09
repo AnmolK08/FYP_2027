@@ -9,12 +9,28 @@ import img6 from '../assets/splash/img6.jpeg';
 import img7 from '../assets/splash/img7.jpeg';
 import img8 from '../assets/splash/img8.jpeg';
 
+import luffy from '../assets/splash/luffy.jpeg'
 import luffy1 from '../assets/splash/luffy1.jpeg';
 import luffy2 from '../assets/splash/luffy2.jpeg';
 import luffy3 from '../assets/splash/luffy3.jpeg';
 import luffy4 from '../assets/splash/luffy4.jpeg';
+import luffy5 from '../assets/splash/luffy5.jpeg';
+import luffy6 from '../assets/splash/luffy6.jpg';
+import luffy7 from '../assets/splash/luffy7.jpeg';
+import luffy8 from '../assets/splash/luffy8.jpeg';
+import luffy9 from '../assets/splash/luffy9.jpeg';
+import luffy10 from '../assets/splash/luffy10.jpeg';
+import luffy11 from '../assets/splash/luffy11.jpeg';
+import luffy12 from '../assets/splash/luffy12.jpeg';
+import luffy13 from '../assets/splash/luffy13.jpeg';
+import luffy14 from '../assets/splash/luffy14.jpeg';
+import luffy15 from '../assets/splash/luffy15.jpeg';
+import luffy16 from '../assets/splash/luffy16.jpeg';
+import luffy17 from '../assets/splash/luffy17.jpeg';
+import luffy18 from '../assets/splash/luffy18.jpeg';
 
-const ALL_IMAGES = [img5, img6, img7, img8, luffy1, luffy2, luffy3, luffy4];
+
+const ALL_IMAGES = [img5, img6, img7, img8, luffy, luffy1, luffy2, luffy3, luffy4, luffy5, luffy6, luffy7, luffy8, luffy9, luffy10, luffy11, luffy12, luffy13, luffy14, luffy15, luffy16, luffy17, luffy18];
 const IMAGE_DURATION = 400; // ms each image stays visible
 
 // Helper to pick 4 unique random images
@@ -29,9 +45,9 @@ const getRandomImages = (images, count = 4) => {
 
 export default function LucySplash({ loading, onDone }) {
   const [images] = useState(() => getRandomImages(ALL_IMAGES, 4));
-  const [activeIndex, setActiveIndex] = useState(-1);  
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [allShown, setAllShown] = useState(false);
-  const [phase, setPhase] = useState('enter');           
+  const [phase, setPhase] = useState('enter');
 
   // Step 1: Open image slot after letters appear
   useEffect(() => {
