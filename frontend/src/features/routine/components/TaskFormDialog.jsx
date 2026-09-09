@@ -10,13 +10,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select';
+import { Textarea } from '../../../components/ui/textarea';
 
 const ALL_DAYS = [
   { id: 'MONDAY', label: 'Mon' },
@@ -39,6 +33,17 @@ const CATEGORIES = [
   { value: 'general', label: 'General' },
 ];
 
+const normalizeTime = (timeStr) => {
+  if (!timeStr) return '08:00';
+  const parts = timeStr.split(':');
+  if (parts.length === 2) {
+    const h = String(parseInt(parts[0], 10) || 0).padStart(2, '0');
+    const m = String(parseInt(parts[1], 10) || 0).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+  return timeStr;
+};
+
 export function TaskFormDialog({
   isOpen,
   onClose,
@@ -56,22 +61,24 @@ export function TaskFormDialog({
   const [priority, setPriority] = useState(1);
 
   useEffect(() => {
-    if (initialData) {
-      setTaskTitle(initialData.title || '');
-      setDescription(initialData.description || '');
-      setStartTime(initialData.startTime || '07:00');
-      setEndTime(initialData.endTime || '08:00');
-      setCategory(initialData.category || 'coding');
-      setDaysOfWeek(initialData.daysOfWeek || ALL_DAYS.map((d) => d.id));
-      setPriority(initialData.priority || 1);
-    } else {
-      setTaskTitle('');
-      setDescription('');
-      setStartTime('07:00');
-      setEndTime('08:00');
-      setCategory('coding');
-      setDaysOfWeek(ALL_DAYS.map((d) => d.id));
-      setPriority(1);
+    if (isOpen) {
+      if (initialData) {
+        setTaskTitle(initialData.title || '');
+        setDescription(initialData.description || '');
+        setStartTime(initialData.startTime || '07:00');
+        setEndTime(initialData.endTime || '08:00');
+        setCategory(initialData.category || 'coding');
+        setDaysOfWeek(initialData.daysOfWeek || ALL_DAYS.map((d) => d.id));
+        setPriority(initialData.priority || 1);
+      } else {
+        setTaskTitle('');
+        setDescription('');
+        setStartTime('07:00');
+        setEndTime('08:00');
+        setCategory('coding');
+        setDaysOfWeek(ALL_DAYS.map((d) => d.id));
+        setPriority(1);
+      }
     }
   }, [initialData, isOpen]);
 
@@ -96,8 +103,8 @@ export function TaskFormDialog({
     onSubmit({
       title: taskTitle.trim(),
       description: description.trim() || null,
-      startTime,
-      endTime,
+      startTime: normalizeTime(startTime),
+      endTime: normalizeTime(endTime),
       category,
       daysOfWeek,
       priority: parseInt(priority, 10) || 1,
@@ -105,8 +112,13 @@ export function TaskFormDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-card border border-border text-card-foreground shadow-lg">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-md bg-card border border-border text-card-foreground shadow-xl">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl text-foreground">{title}</DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs">
@@ -126,6 +138,7 @@ export function TaskFormDialog({
               placeholder="e.g. LeetCode Practice, Gym, DSA Review"
               className="bg-background border-input text-foreground text-sm"
               required
+              autoFocus
             />
           </div>
 
@@ -163,37 +176,34 @@ export function TaskFormDialog({
               <Label htmlFor="task-category" className="text-xs text-foreground">
                 Category
               </Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-popover-foreground">
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="task-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-background border border-input rounded-md text-xs text-foreground px-2.5 h-10"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="task-priority" className="text-xs text-foreground">
                 Priority
               </Label>
-              <Select
+              <select
+                id="task-priority"
                 value={String(priority)}
-                onValueChange={(val) => setPriority(parseInt(val, 10))}
+                onChange={(e) => setPriority(parseInt(e.target.value, 10))}
+                className="w-full bg-background border border-input rounded-md text-xs text-foreground px-2.5 h-10"
               >
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border text-popover-foreground">
-                  <SelectItem value="1">High (1)</SelectItem>
-                  <SelectItem value="2">Medium (2)</SelectItem>
-                  <SelectItem value="3">Normal (3)</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="1">High Priority (1)</option>
+                <option value="2">Medium Priority (2)</option>
+                <option value="3">Normal Priority (3)</option>
+              </select>
             </div>
           </div>
 

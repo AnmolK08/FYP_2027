@@ -143,7 +143,7 @@ export const validateUpdateTask = (req, res, next) => {
     });
   }
 
-  if (!endTime !== undefined && endTime && !TIME_REGEX.test(endTime)) {
+  if (endTime !== undefined && !TIME_REGEX.test(endTime)) {
     return res.status(400).json({
       success: false,
       message: 'Invalid endTime (must be HH:MM in 24-hour format)',

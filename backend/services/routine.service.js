@@ -75,13 +75,6 @@ export const getRoutines = async (userId) => {
         where: { isActive: true },
         orderBy: { startTime: 'asc' },
       },
-      _count: {
-        select: {
-          tasks: {
-            where: { isActive: true },
-          },
-        },
-      },
     },
     orderBy: [
       { isActive: 'desc' },

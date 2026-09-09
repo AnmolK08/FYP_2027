@@ -3,14 +3,13 @@ import ProtectedRoute from '@/routes/ProtectedRoute';
 import {
   CalendarCheck,
   Plus,
-  Flame,
   Calendar as CalendarIcon,
   Layers,
   BarChart3,
   CheckCircle2,
   Clock,
   MoreVertical,
-  ArrowRight,
+  Edit3,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
@@ -90,6 +89,10 @@ export default function RoutinePage() {
   const routineDay = todayData?.routineDay;
   const taskLogs = routineDay?.taskLogs || [];
 
+  // Reactively derive the routine currently open in EditRoutineDialog from react-query cache
+  const currentEditingRoutine =
+    routines.find((r) => r.id === selectedRoutineForEdit?.id) || selectedRoutineForEdit;
+
   const handleTaskStatusChange = (taskLogId, status) => {
     if (!routineDay) return;
     updateTaskLogMutation.mutate({
@@ -115,12 +118,6 @@ export default function RoutinePage() {
   const handleOpenAddTask = (routineId) => {
     setTaskFormRoutineId(routineId);
     setSelectedTaskForEdit(null);
-    setIsTaskFormOpen(true);
-  };
-
-  const handleOpenEditTask = (task, routineId) => {
-    setTaskFormRoutineId(routineId);
-    setSelectedTaskForEdit(task);
     setIsTaskFormOpen(true);
   };
 
@@ -158,7 +155,7 @@ export default function RoutinePage() {
     <ProtectedRoute>
       <main className="min-h-screen bg-background text-foreground">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14 space-y-8">
-          {/* Header Section matching Dashboard & Streaks */}
+          {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 pb-2">
             <div>
               <div className="text-overline">Consistency Engine</div>
@@ -182,7 +179,7 @@ export default function RoutinePage() {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => setIsCreateOpen(true)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-9"
               >
                 <Plus size={15} />
                 New Routine
@@ -264,15 +261,25 @@ export default function RoutinePage() {
                         </p>
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenAddTask(activeRoutine.id)}
-                        className="text-xs border-border bg-background hover:bg-muted text-foreground gap-1.5 h-8"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        Add Habit Today
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditRoutine(activeRoutine)}
+                          className="text-xs border-border bg-background hover:bg-muted text-foreground gap-1.5 h-8"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          Edit Routine
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenAddTask(activeRoutine.id)}
+                          className="text-xs bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5 h-8"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Habit Today
+                        </Button>
+                      </div>
                     </div>
 
                     {isLoadingToday ? (
@@ -291,16 +298,27 @@ export default function RoutinePage() {
                           No habits scheduled for today in &quot;{activeRoutine.name}&quot;
                         </p>
                         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                          Tasks in this routine might be configured for other days of the week.
+                          Tasks in this routine might be configured for other days of the week, or you haven&apos;t added tasks yet.
                         </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenEditRoutine(activeRoutine)}
-                          className="border-border bg-background hover:bg-muted text-foreground text-xs"
-                        >
-                          Edit Schedule
-                        </Button>
+                        <div className="flex justify-center gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenAddTask(activeRoutine.id)}
+                            className="border-border bg-background hover:bg-muted text-foreground text-xs gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add Habit Now
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditRoutine(activeRoutine)}
+                            className="border-border bg-background hover:bg-muted text-foreground text-xs"
+                          >
+                            Edit Schedule
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-2.5">
@@ -331,7 +349,7 @@ export default function RoutinePage() {
                 <Button
                   size="sm"
                   onClick={() => setIsCreateOpen(true)}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs gap-1.5"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs gap-1.5 h-8"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   New Routine
@@ -379,7 +397,7 @@ export default function RoutinePage() {
                         <div className="space-y-3">
                           {/* Top Header */}
                           <div className="flex items-start justify-between gap-3">
-                            <div>
+                            <div className="space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="font-heading text-lg text-foreground">
                                   {routine.name}
@@ -391,7 +409,7 @@ export default function RoutinePage() {
                                 )}
                               </div>
                               {routine.description && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                <p className="text-xs text-muted-foreground line-clamp-2">
                                   {routine.description}
                                 </p>
                               )}
@@ -408,29 +426,38 @@ export default function RoutinePage() {
                                   <MoreVertical className="w-4 h-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44 bg-popover border-border text-popover-foreground">
+                              <DropdownMenuContent
+                                align="end"
+                                className="w-48 bg-popover border-border text-popover-foreground z-[120]"
+                              >
                                 {!isCurrentActive && (
                                   <DropdownMenuItem
-                                    onClick={() => activateRoutineMutation.mutate(routine.id)}
+                                    onSelect={() => activateRoutineMutation.mutate(routine.id)}
                                     className="cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
                                   >
                                     Set as Active Routine
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem
-                                  onClick={() => handleOpenEditRoutine(routine)}
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleOpenEditRoutine(routine);
+                                  }}
                                   className="cursor-pointer"
                                 >
                                   Edit Routine & Tasks
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleOpenAddTask(routine.id)}
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    handleOpenAddTask(routine.id);
+                                  }}
                                   className="cursor-pointer"
                                 >
-                                  Add New Task
+                                  Add Habit Task
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => archiveRoutineMutation.mutate(routine.id)}
+                                  onSelect={() => archiveRoutineMutation.mutate(routine.id)}
                                   className="cursor-pointer text-destructive focus:text-destructive"
                                 >
                                   Archive Routine
@@ -447,7 +474,7 @@ export default function RoutinePage() {
 
                             {tasks.length === 0 ? (
                               <p className="text-xs text-muted-foreground italic py-2">
-                                No tasks added yet. Click &quot;Add Task&quot; to configure.
+                                No habits added yet. Click &quot;Manage Tasks&quot; to configure.
                               </p>
                             ) : (
                               <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
@@ -470,14 +497,15 @@ export default function RoutinePage() {
                         </div>
 
                         {/* Bottom Actions */}
-                        <div className="pt-3 border-t border-border flex items-center justify-between gap-2">
+                        <div className="pt-3 border-t border-border flex items-center justify-between gap-2 flex-wrap">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleOpenEditRoutine(routine)}
-                            className="text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+                            className="text-xs border-border bg-background hover:bg-muted text-foreground h-8 px-2.5 gap-1"
                           >
-                            Manage Tasks
+                            <Edit3 className="w-3 h-3" />
+                            Manage Tasks ({tasks.length})
                           </Button>
 
                           {isCurrentActive ? (
@@ -568,29 +596,36 @@ export default function RoutinePage() {
               setIsEditRoutineOpen(false);
               setSelectedRoutineForEdit(null);
             }}
-            routine={selectedRoutineForEdit}
+            routine={currentEditingRoutine}
             onUpdateRoutine={(data) => {
-              if (selectedRoutineForEdit) {
+              if (currentEditingRoutine) {
                 updateRoutineMutation.mutate({
-                  routineId: selectedRoutineForEdit.id,
+                  routineId: currentEditingRoutine.id,
                   data,
                 });
               }
             }}
-            onAddTask={() => {
-              if (selectedRoutineForEdit) {
-                handleOpenAddTask(selectedRoutineForEdit.id);
+            onAddTask={(taskData) => {
+              if (currentEditingRoutine) {
+                addTaskMutation.mutate({
+                  routineId: currentEditingRoutine.id,
+                  data: taskData,
+                });
               }
             }}
-            onEditTask={(task) => {
-              if (selectedRoutineForEdit) {
-                handleOpenEditTask(task, selectedRoutineForEdit.id);
-              }
+            onUpdateTask={(taskId, taskData) => {
+              updateTaskMutation.mutate({
+                taskId,
+                data: taskData,
+              });
             }}
             onRemoveTask={(taskId) => {
               removeTaskMutation.mutate(taskId);
             }}
             isUpdating={updateRoutineMutation.isPending}
+            isAddingTask={addTaskMutation.isPending}
+            isUpdatingTask={updateTaskMutation.isPending}
+            isRemovingTask={removeTaskMutation.isPending}
           />
 
           <TaskFormDialog
