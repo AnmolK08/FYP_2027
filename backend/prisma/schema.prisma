@@ -30,6 +30,9 @@ model User {
   knowledgeDocs      KnowledgeDoc[]
   mockInterviews     MockInterview[]
   flashcards         Flashcard[]
+  routines           Routine[]
+  routineDays        RoutineDay[]
+  routineTaskLogs    RoutineTaskLog[]
 
   @@map("users")
 }
@@ -143,5 +146,107 @@ model Flashcard {
   @@index([documentId])
   @@map("flashcards")
 }
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+model Routine {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  name        String
+  description String?
+  isActive    Boolean       @default(false) @map("is_active")
+  isArchived  Boolean       @default(false) @map("is_archived")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks       RoutineTask[]
+  routineDays RoutineDay[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("routines")
+}
+
+model RoutineTask {
+  id          String        @id @default(uuid())
+  routineId   String        @map("routine_id")
+  title       String
+  description String?
+  startTime   String        @map("start_time")
+  endTime     String        @map("end_time")
+  category    String        @default("general")
+  daysOfWeek  DayOfWeek[]   @map("days_of_week")
+  priority    Int           @default(1)
+  isActive    Boolean       @default(true) @map("is_active")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  routine     Routine          @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  taskLogs    RoutineTaskLog[]
+
+  @@index([routineId])
+  @@index([routineId, isActive])
+  @@map("routine_tasks")
+}
+
+model RoutineDay {
+  id                   String           @id @default(uuid())
+  userId               String           @map("user_id")
+  routineId            String           @map("routine_id")
+  date                 DateTime         @db.Date
+  completionPercentage Float            @default(0) @map("completion_percentage")
+  completedTasks       Int              @default(0) @map("completed_tasks")
+  totalTasks           Int              @default(0) @map("total_tasks")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routine  Routine          @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  taskLogs RoutineTaskLog[]
+
+  @@unique([userId, routineId, date])
+  @@index([userId, date])
+  @@map("routine_days")
+}
+
+model RoutineTaskLog {
+  id                 String      @id @default(uuid())
+  routineDayId       String      @map("routine_day_id")
+  routineTaskId      String?     @map("routine_task_id")
+  userId             String      @map("user_id")
+  taskTitleSnapshot  String      @map("task_title_snapshot")
+  startTimeSnapshot  String      @map("start_time_snapshot")
+  endTimeSnapshot    String      @map("end_time_snapshot")
+  status             TaskStatus  @default(PENDING)
+  completedAt        DateTime?   @map("completed_at")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  routineDay  RoutineDay   @relation(fields: [routineDayId], references: [id], onDelete: Cascade)
+  routineTask RoutineTask? @relation(fields: [routineTaskId], references: [id], onDelete: SetNull)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([routineDayId])
+  @@index([routineTaskId])
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("routine_task_logs")
+}
+
 
 

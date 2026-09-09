@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, 
   Brain, BookOpen, Flame, Code2, FileText, Layers, 
-  TrendingUp, Zap, Map, ChevronRight, ChevronLeft
+  TrendingUp, Zap, Map, ChevronRight, ChevronLeft, CalendarCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -20,6 +20,7 @@ import {
 
 const mainNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/routine', label: 'Routine Tracker', icon: CalendarCheck, badge: 'new' },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/knowledge', label: 'Knowledge', icon: BookOpen, badge: 'new' },
 ];

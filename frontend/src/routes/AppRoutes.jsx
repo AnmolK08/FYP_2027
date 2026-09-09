@@ -18,6 +18,7 @@ import PredictorPage from '../pages/Predictor/PredictorPage';
 import ResumePage from '../pages/Resume/ResumePage';
 import SystemDesignPage from '../pages/SystemDesign/SystemDesignPage';
 import TracksPage from '../pages/Tracks/TracksPage';
+import RoutinePage from '../pages/Routine/RoutinePage';
 
 import ProtectedRoute from './ProtectedRoute';
 
@@ -43,6 +44,7 @@ export default function AppRoutes() {
       <Route path="/resume" element={<ResumePage />} />
       <Route path="/sd" element={<SystemDesignPage />} />
       <Route path="/tracks" element={<TracksPage />} />
+      <Route path="/routine" element={<RoutinePage />} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

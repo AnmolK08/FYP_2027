@@ -251,4 +251,103 @@ export const api = {
   async getTracks() {
     return apiClient('/tracks');
   },
+
+  // Routine & Habit Tracker
+  async createRoutine(data) {
+    return apiClient('/routines', {
+      method: 'POST',
+      body: data,
+    });
+  },
+
+  async getRoutines() {
+    return apiClient('/routines');
+  },
+
+  async getRoutineById(routineId) {
+    return apiClient(`/routines/${routineId}`);
+  },
+
+  async updateRoutine(routineId, data) {
+    return apiClient(`/routines/${routineId}`, {
+      method: 'PATCH',
+      body: data,
+    });
+  },
+
+  async archiveRoutine(routineId) {
+    return apiClient(`/routines/${routineId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async activateRoutine(routineId) {
+    return apiClient(`/routines/${routineId}/activate`, {
+      method: 'PATCH',
+    });
+  },
+
+  async addRoutineTask(routineId, data) {
+    return apiClient(`/routines/${routineId}/tasks`, {
+      method: 'POST',
+      body: data,
+    });
+  },
+
+  async updateRoutineTask(taskId, data) {
+    return apiClient(`/routines/tasks/${taskId}`, {
+      method: 'PATCH',
+      body: data,
+    });
+  },
+
+  async removeRoutineTask(taskId) {
+    return apiClient(`/routines/tasks/${taskId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getTodayRoutine(date = null) {
+    const query = date ? `?date=${encodeURIComponent(date)}` : '';
+    return apiClient(`/routines/today${query}`);
+  },
+
+  async getRoutineDay(date) {
+    return apiClient(`/routines/days/${date}`);
+  },
+
+  async updateTaskLog(dayId, taskLogId, data) {
+    return apiClient(`/routines/days/${dayId}/tasks/${taskLogId}`, {
+      method: 'PATCH',
+      body: data,
+    });
+  },
+
+  async getWeeklyAnalytics(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set('startDate', params.startDate);
+    if (params.endDate) searchParams.set('endDate', params.endDate);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient(`/routines/analytics/weekly${query}`);
+  },
+
+  async getMonthlyAnalytics(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.month) searchParams.set('month', params.month);
+    if (params.year) searchParams.set('year', params.year);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient(`/routines/analytics/monthly${query}`);
+  },
+
+  async getTaskPerformance(taskId, params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set('startDate', params.startDate);
+    if (params.endDate) searchParams.set('endDate', params.endDate);
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiClient(`/routines/tasks/${taskId}/performance${query}`);
+  },
+
+  async getRoutineSuggestions() {
+    return apiClient('/routines/suggestions');
+  },
 };

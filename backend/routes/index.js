@@ -13,6 +13,7 @@ import flashcardRoutes from './flashcard.routes.js';
 import leetcodeRoutes from './leetcode.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import leaderboardRoutes from './leaderboard.routes.js';
+import routineRoutes from './routine.routes.js';
 
 import * as interviewController from '../controllers/interview.controller.js';
 import * as aiMiscController from '../controllers/ai-misc.controller.js';
@@ -48,5 +49,8 @@ router.use('/leetcode', leetcodeRoutes);
 // Dashboard & Leaderboard (Redis-backed)
 router.use('/dashboard', dashboardRoutes);
 router.use('/leaderboard', leaderboardRoutes);
+
+// Routine & Habit Tracker
+router.use('/routines', routineRoutes);
 
 export default router;
