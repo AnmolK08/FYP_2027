@@ -72,7 +72,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoints
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'PrepSphere API is running' });
+  res.json({ status: 'ok', message: 'Lucy API is running' });
 });
 
 app.get('/health', (req, res) => {

@@ -1,4 +1,4 @@
-# PrepSphere — Placement Preparation Platform
+# Lucy — Placement Preparation Platform
 
 A unified placement preparation workspace for engineering students featuring LeetCode analytics, AI mentorship, mock interviews, a competitive leaderboard, knowledge base management, and more.
 

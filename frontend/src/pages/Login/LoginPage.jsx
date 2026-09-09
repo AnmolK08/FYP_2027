@@ -19,7 +19,7 @@ export default function LoginPage() {
             Sign in to sync your LeetCode progress and pick up exactly where you left off.
           </p>
         </div>
-        <div className="relative text-overline text-primary-foreground/50">PrepSphere for engineering students</div>
+        <div className="relative text-overline text-primary-foreground/50">Lucy for engineering students</div>
       </div>
 
       <div className="flex items-center justify-center p-6 md:p-10">
@@ -28,7 +28,7 @@ export default function LoginPage() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <Sparkles size={16} strokeWidth={1.75} />
             </span>
-            <span className="font-heading text-lg">PrepSphere</span>
+            <span className="font-heading text-lg">Lucy</span>
           </div>
           <h2 className="font-heading text-3xl text-foreground">Sign in</h2>
           <p className="text-muted-foreground mt-2 text-sm">
@@ -38,7 +38,7 @@ export default function LoginPage() {
           <LoginForm />
 
           <div className="mt-6 text-sm text-muted-foreground">
-            New to PrepSphere?{' '}
+            New to Lucy?{' '}
             <Link to="/signup" data-testid="goto-signup" className="text-foreground font-medium underline-offset-4 hover:underline">
               Create an account
             </Link>

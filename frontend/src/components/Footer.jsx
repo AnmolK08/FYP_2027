@@ -34,7 +34,7 @@ export default function Footer() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <Sparkles size={16} strokeWidth={1.75} />
             </span>
-            <span className="font-heading font-bold text-lg tracking-tight">PrepSphere</span>
+            <span className="font-heading font-bold text-lg tracking-tight">Lucy</span>
           </div>
           <p className="text-muted-foreground max-w-sm">
             A unified placement preparation workspace for engineering students. Built for focus, designed for outcomes.
@@ -81,7 +81,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-border py-5 text-center text-xs text-muted-foreground">
-        &copy; {new Date().getFullYear()} PrepSphere. Built for engineering students.
+        &copy; {new Date().getFullYear()} Lucy. Built for engineering students.
       </div>
     </footer>
   );

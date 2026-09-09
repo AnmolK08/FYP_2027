@@ -43,7 +43,7 @@ export default function Landing() {
                 placement preparation goal.
               </h1>
               <p className="mt-6 max-w-xl text-muted-foreground text-lg leading-relaxed">
-                PrepSphere unifies your LeetCode analytics, college leaderboards, AI mentorship, and interview practice — so you stop juggling tabs and start making real progress.
+                Lucy unifies your LeetCode analytics, college leaderboards, AI mentorship, and interview practice — so you stop juggling tabs and start making real progress.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/signup">
@@ -67,7 +67,7 @@ export default function Landing() {
             <div className="lg:col-span-5">
               <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden fade-up" style={{ animationDelay: '120ms' }}>
                 <div className="border-b border-border px-5 py-3 flex items-center justify-between">
-                  <div className="text-overline">prepsphere.dashboard</div>
+                  <div className="text-overline">lucy.dashboard</div>
                   <div className="flex gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     <span className="h-2 w-2 rounded-full bg-amber-500" />
@@ -134,7 +134,7 @@ export default function Landing() {
             Built for the way you actually prepare.
           </h2>
           <p className="text-muted-foreground mt-4">
-            Stop switching between five tabs. PrepSphere brings the workflow under one roof — calm, structured, and focused on outcomes.
+            Stop switching between five tabs. Lucy brings the workflow under one roof — calm, structured, and focused on outcomes.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">

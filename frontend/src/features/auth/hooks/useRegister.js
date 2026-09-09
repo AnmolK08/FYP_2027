@@ -27,7 +27,7 @@ export function useRegister() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
 
-      toast.success(data?.message || 'Account created successfully! Welcome to PrepSphere.', {
+      toast.success(data?.message || 'Account created successfully! Welcome to Lucy.', {
         id: context?.toastId,
       });
     },

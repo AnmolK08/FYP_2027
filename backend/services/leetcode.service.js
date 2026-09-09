@@ -32,7 +32,7 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
     headers: {
       'Content-Type': 'application/json',
       'Referer': `https://leetcode.com/${leetcodeUsername}/`,
-      'User-Agent': 'Mozilla/5.0 PrepSphere/1.0',
+      'User-Agent': 'Mozilla/5.0 Lucy/1.0',
     },
     body: JSON.stringify({
       query: `

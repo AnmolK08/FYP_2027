@@ -92,7 +92,7 @@ export default function Sidebar() {
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shrink-0">
             <Sparkles size={16} strokeWidth={1.75} />
           </span>
-          {isExpanded && <span className="font-heading text-lg tracking-tight whitespace-nowrap">PrepSphere</span>}
+          {isExpanded && <span className="font-heading text-lg tracking-tight whitespace-nowrap">Lucy</span>}
         </Link>
         {isExpanded && (
           <Button variant="ghost" size="icon" className="h-8 w-8 ml-2" onClick={() => setIsExpanded(false)}>

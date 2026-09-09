@@ -33,7 +33,7 @@ export default function RegisterPage() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <Sparkles size={16} strokeWidth={1.75} />
             </span>
-            <span className="font-heading text-lg">PrepSphere</span>
+            <span className="font-heading text-lg">Lucy</span>
           </div>
           <h2 className="font-heading text-3xl text-foreground">Create your account</h2>
           <p className="text-muted-foreground mt-2 text-sm">

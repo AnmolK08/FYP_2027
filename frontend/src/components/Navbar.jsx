@@ -62,7 +62,7 @@ export default function Navbar() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <Sparkles size={16} strokeWidth={1.75} />
             </span>
-            <span className="font-heading text-lg tracking-tight">PrepSphere</span>
+            <span className="font-heading text-lg tracking-tight">Lucy</span>
           </Link>
 
           {isAuthed && (
