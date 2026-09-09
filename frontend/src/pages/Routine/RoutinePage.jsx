@@ -10,6 +10,7 @@ import {
   Clock,
   MoreVertical,
   Edit3,
+  Loader2,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Button } from '../../components/ui/button';
@@ -155,6 +156,39 @@ export default function RoutinePage() {
     <ProtectedRoute>
       <main className="min-h-screen bg-background text-foreground">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14 space-y-8">
+          {/* Full-page skeleton on initial load */}
+          {isLoadingRoutines && isLoadingToday ? (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              {/* Header skeleton */}
+              <div className="space-y-3">
+                <div className="h-3 w-32 rounded bg-muted/60 animate-pulse" />
+                <div className="h-10 w-80 rounded-md bg-muted/50 animate-pulse" />
+                <div className="h-4 w-56 rounded bg-muted/40 animate-pulse" />
+              </div>
+              {/* Tabs skeleton */}
+              <div className="h-10 w-96 rounded-md bg-muted/40 animate-pulse" />
+              {/* Progress ring skeleton */}
+              <div className="flex justify-center py-6">
+                <div className="w-36 h-36 rounded-full border-4 border-muted/30 animate-pulse" />
+              </div>
+              {/* Task list skeleton */}
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((n) => (
+                  <div
+                    key={n}
+                    className="flex items-center gap-4 p-4 rounded-md border border-border bg-card"
+                  >
+                    <div className="w-5 h-5 rounded border border-muted animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className={`h-4 rounded bg-muted/50 animate-pulse`} style={{ width: `${60 + n * 8}%` }} />
+                      <div className="h-3 w-24 rounded bg-muted/30 animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+          <>
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 pb-2">
             <div>
@@ -433,8 +467,12 @@ export default function RoutinePage() {
                                 {!isCurrentActive && (
                                   <DropdownMenuItem
                                     onSelect={() => activateRoutineMutation.mutate(routine.id)}
+                                    disabled={activateRoutineMutation.isPending}
                                     className="cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
                                   >
+                                    {activateRoutineMutation.isPending ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                                    ) : null}
                                     Set as Active Routine
                                   </DropdownMenuItem>
                                 )}
@@ -458,8 +496,12 @@ export default function RoutinePage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onSelect={() => archiveRoutineMutation.mutate(routine.id)}
+                                  disabled={archiveRoutineMutation.isPending}
                                   className="cursor-pointer text-destructive focus:text-destructive"
                                 >
+                                  {archiveRoutineMutation.isPending ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                                  ) : null}
                                   Archive Routine
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -519,9 +561,12 @@ export default function RoutinePage() {
                               variant="outline"
                               onClick={() => activateRoutineMutation.mutate(routine.id)}
                               disabled={activateRoutineMutation.isPending}
-                              className="border-border bg-background hover:bg-muted text-foreground text-xs h-8"
+                              className="border-border bg-background hover:bg-muted text-foreground text-xs h-8 gap-1.5"
                             >
-                              Activate Routine
+                              {activateRoutineMutation.isPending && (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              )}
+                              {activateRoutineMutation.isPending ? 'Activating...' : 'Activate Routine'}
                             </Button>
                           )}
                         </div>
@@ -639,6 +684,8 @@ export default function RoutinePage() {
             isSubmitting={addTaskMutation.isPending || updateTaskMutation.isPending}
             title={selectedTaskForEdit ? 'Edit Habit Task' : 'Add Habit Task'}
           />
+        </>
+        )}
         </div>
       </main>
     </ProtectedRoute>

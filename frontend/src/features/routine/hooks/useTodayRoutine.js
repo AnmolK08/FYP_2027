@@ -66,7 +66,11 @@ export function useUpdateTaskLog() {
 
       return { previousData };
     },
-    onError: (err, newTodo, context) => {
+    onSuccess: (_data, variables) => {
+      const statusLabels = { COMPLETED: 'completed ✓', SKIPPED: 'skipped', PENDING: 'reset' };
+      toast.success(`Task ${statusLabels[variables.status] || 'updated'}`);
+    },
+    onError: (err, _variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(['todayRoutine', 'today'], context.previousData);
       }

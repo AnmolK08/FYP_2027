@@ -2,11 +2,7 @@ import * as routineService from '../services/routine.service.js';
 import * as analyticsService from '../services/routine-analytics.service.js';
 import * as suggestionsService from '../services/routine-suggestions.service.js';
 
-// --- Data Optimization & Response Serialization Helpers ---
-
-/**
- * Strips internal metadata (createdAt, updatedAt, userId) from a routine task.
- */
+// Strips internal metadata (createdAt, updatedAt, userId) from a routine task.
 const serializeTask = (task) => {
   if (!task) return null;
   return {
@@ -23,9 +19,7 @@ const serializeTask = (task) => {
   };
 };
 
-/**
- * Strips internal fields (userId, isArchived, createdAt, updatedAt, _count) from a routine.
- */
+// Strips internal fields (userId, isArchived, createdAt, updatedAt, _count) from a routine.
 const serializeRoutine = (routine) => {
   if (!routine) return null;
   return {
@@ -37,9 +31,7 @@ const serializeRoutine = (routine) => {
   };
 };
 
-/**
- * Strips userId, routineDayId, createdAt, and updatedAt from daily task logs.
- */
+// Strips userId, routineDayId, createdAt, and updatedAt from daily task logs.
 const serializeTaskLog = (log) => {
   if (!log) return null;
   return {
@@ -59,9 +51,7 @@ const serializeTaskLog = (log) => {
   };
 };
 
-/**
- * Strips userId, createdAt, and updatedAt from daily routine snapshot.
- */
+// Strips userId, createdAt, and updatedAt from daily routine snapshot.
 const serializeRoutineDay = (day) => {
   if (!day) return null;
   return {
@@ -81,7 +71,6 @@ const serializeRoutineDay = (day) => {
   };
 };
 
-// --- Controllers ---
 
 export const createRoutine = async (req, res, next) => {
   try {

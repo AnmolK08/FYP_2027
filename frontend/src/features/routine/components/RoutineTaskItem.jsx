@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Clock, MoreVertical, XCircle, RotateCcw } from 'lucide-react';
+import { Check, Clock, MoreVertical, XCircle, RotateCcw, Loader2 } from 'lucide-react';
 import { Badge } from '../../../components/ui/badge';
 import {
   DropdownMenu,
