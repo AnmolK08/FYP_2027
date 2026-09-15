@@ -15,6 +15,7 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
     college: profile?.college || '',
     department: profile?.department || '',
     leetcodeUsername: profile?.leetcodeUsername || '',
+    codeforcesUsername: profile?.codeforcesUsername || '',
     lucyUsername: profile?.lucyUsername || '',
   });
   const [usernameError, setUsernameError] = useState('');
@@ -30,6 +31,7 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
         college: profile.college || '',
         department: profile.department || '',
         leetcodeUsername: profile.leetcodeUsername || '',
+        codeforcesUsername: profile.codeforcesUsername || '',
         lucyUsername: profile.lucyUsername || '',
       });
       setUsernameError('');
@@ -71,12 +73,13 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
         await updateLucyUsernameMutation.mutateAsync(form.lucyUsername);
       }
 
-      // 2. Update general profile info (name, college, dept, leetcodeUsername)
+      // 2. Update general profile info (name, college, dept, leetcodeUsername, codeforcesUsername)
       await updateProfileMutation.mutateAsync({
         name: form.name,
         college: form.college,
         department: form.department,
         leetcodeUsername: form.leetcodeUsername,
+        codeforcesUsername: form.codeforcesUsername,
       });
 
       onOpenChange(false);
@@ -172,6 +175,7 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
           <Field label="College" v={form.college} onChange={set('college')} tid="edit-college" />
           <Field label="Department" v={form.department} onChange={set('department')} tid="edit-department" />
           <Field label="LeetCode Handle" v={form.leetcodeUsername} onChange={set('leetcodeUsername')} mono tid="edit-leetcode" />
+          <Field label="Codeforces Handle" v={form.codeforcesUsername} onChange={set('codeforcesUsername')} mono tid="edit-codeforces" />
         </div>
 
         {/* Footer */}

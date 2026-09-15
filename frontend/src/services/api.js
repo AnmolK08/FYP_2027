@@ -36,6 +36,14 @@ export const api = {
     return apiClient('/dashboard');
   },
 
+  async getLeetcodeDashboard() {
+    return apiClient('/dashboard/leetcode');
+  },
+
+  async getCodeforcesDashboard() {
+    return apiClient('/dashboard/codeforces');
+  },
+
   async getPublicProfile(username) {
     return apiClient(`/u/${encodeURIComponent(username)}`);
   },
@@ -55,6 +63,15 @@ export const api = {
     return apiClient('/leetcode/stats');
   },
 
+  // Codeforces
+  async syncCodeforces() {
+    return apiClient('/codeforces/sync', { method: 'POST' });
+  },
+
+  async getCodeforcesStats() {
+    return apiClient('/codeforces/stats');
+  },
+
   async getStreakSummary() {
     return apiClient('/activity/streaks');
   },
@@ -68,12 +85,16 @@ export const api = {
   },
 
   // Leaderboard
-  async getLeaderboard(page = 1, limit = 20) {
-    return apiClient(`/leaderboard?page=${page}&limit=${limit}`);
+  async getLeaderboard(page = 1, limit = 20, type = 'lucy') {
+    return apiClient(`/leaderboard?page=${page}&limit=${limit}&type=${type}`);
   },
 
-  async getMyLeaderboardRank() {
-    return apiClient('/leaderboard/me');
+  async getMyLeaderboardRank(type = 'lucy') {
+    return apiClient(`/leaderboard/me?type=${type}`);
+  },
+
+  async getNearbyUsers(type = 'lucy', window = 2) {
+    return apiClient(`/leaderboard/nearby?type=${type}&window=${window}`);
   },
 
   // Mentor / Chat

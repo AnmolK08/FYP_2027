@@ -18,6 +18,7 @@ const sanitizeUser = (user) => {
     college: user.college || null,
     department: user.department || null,
     leetcodeUsername: user.leetcodeUsername || null,
+    codeforcesUsername: user.codeforcesUsername || null,
     lucyUsername: user.lucyUsername || null,
     avatar: user.avatar || null,
     dailyGoal: user.dailyGoal ?? 3,
@@ -167,7 +168,7 @@ export const getUserById = async (id) => {
 };
 
 export const updateUserProfile = async (id, updateData) => {
-  const { name, college, department, leetcodeUsername, dailyGoal } = updateData;
+  const { name, college, department, leetcodeUsername, codeforcesUsername, dailyGoal } = updateData;
 
   const user = await prisma.user.update({
     where: { id },
@@ -176,6 +177,7 @@ export const updateUserProfile = async (id, updateData) => {
       college: college !== undefined ? college : undefined,
       department: department !== undefined ? department : undefined,
       leetcodeUsername: leetcodeUsername !== undefined ? leetcodeUsername : undefined,
+      codeforcesUsername: codeforcesUsername !== undefined ? codeforcesUsername : undefined,
       dailyGoal: dailyGoal !== undefined ? dailyGoal : undefined,
     },
   });

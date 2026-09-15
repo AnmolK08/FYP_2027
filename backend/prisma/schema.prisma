@@ -13,28 +13,36 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(uuid())
-  email              String   @unique
-  password           String
-  name               String
-  college            String?
-  department         String?
-  leetcodeUsername   String?  @map("leetcode_username")
-  lucyUsername       String?  @unique @map("lucy_username")
-  avatar             String?
-  dailyGoal          Int      @default(3) @map("daily_goal")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
-  leetcodeStats      LeetcodeStats?
-  activities         Activity[]
-  chatMessages       ChatMessage[]
-  knowledgeDocs      KnowledgeDoc[]
-  mockInterviews     MockInterview[]
-  flashcards         Flashcard[]
-  routines           Routine[]
-  routineDays        RoutineDay[]
-  routineTaskLogs    RoutineTaskLog[]
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  password             String
+  name                 String
+  college              String?
+  department           String?
+  leetcodeUsername     String?  @map("leetcode_username")
+  codeforcesUsername   String?  @map("codeforces_username")
+  lucyUsername         String?  @unique @map("lucy_username")
+  avatar               String?
+  dailyGoal            Int      @default(3) @map("daily_goal")
+  // ── Lucy V1 Scoring ───────────────────────────────────────────────────────
+  // lucyScore is stored here so the global leaderboard query only needs
+  // to touch the users table (no join required).
+  // Individual platform scores live on their own stat models.
+  lucyScore            Float    @default(0) @map("lucy_score")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  leetcodeStats        LeetcodeStats?
+  codeforcesStats      CodeforcesStats?
+  activities           Activity[]
+  chatMessages         ChatMessage[]
+  knowledgeDocs        KnowledgeDoc[]
+  mockInterviews       MockInterview[]
+  flashcards           Flashcard[]
+  routines             Routine[]
+  routineDays          RoutineDay[]
+  routineTaskLogs      RoutineTaskLog[]
 
+  @@index([lucyScore])
   @@map("users")
 }
 
@@ -58,12 +66,75 @@ model LeetcodeStats {
   streak           Int      @default(0)
   activeDays       Int      @default(0) @map("active_days")
   universalScore   Float    @default(0) @map("universal_score")
+  // Lucy V1: leetcodeScore replaces/parallels universalScore for the
+  // platform-specific leaderboard. universalScore is kept for backward compat.
+  leetcodeScore    Float    @default(0) @map("leetcode_score")
   lastSynced       DateTime? @map("last_synced")
   createdAt        DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([leetcodeScore])
   @@map("leetcode_stats")
 }
+
+// ─── Codeforces Stats ────────────────────────────────────────────────────────
+// Independent provider model. Adding CodeChef/GFG/Github follows the same
+// pattern: a separate model with a 1:1 relation to User, its own service,
+// controller, and routes. Never merge provider data into User or a generic blob.
+
+model CodeforcesStats {
+  id                 String    @id @default(uuid())
+  userId             String    @unique @map("user_id")
+
+  // Profile
+  handle             String?                          // CF handle (may differ from stored username)
+  avatar             String?                          // titlePhoto URL
+  firstName          String?   @map("first_name")
+  lastName           String?   @map("last_name")
+  country            String?
+  city               String?
+  organization       String?
+
+  // Ratings & rank
+  rating             Int       @default(0)            // current rating
+  maxRating          Int       @default(0)            @map("max_rating")
+  rank               String?                          // e.g. "pupil"
+  maxRank            String?   @map("max_rank")       // e.g. "specialist"
+
+  // Social
+  contribution       Int       @default(0)            // CF contribution score
+  friendOfCount      Int       @default(0)            @map("friend_of_count")
+
+  // Solved / submission statistics
+  totalSolved        Int       @default(0)            @map("total_solved")
+  totalSubmissions   Int       @default(0)            @map("total_submissions")
+
+  // Contest participation
+  contestsAttended   Int       @default(0)            @map("contests_attended")
+
+  // Lucy V1 score for the Codeforces platform leaderboard
+  codeforcesScore    Float     @default(0)            @map("codeforces_score")
+
+  // Rich JSON blobs — provider-specific structures
+  ratingHistory      Json?     @map("rating_history")  // [{contestId, contestName, rank, oldRating, newRating, timestamp}]
+  ratingWiseSolved   Json?     @map("rating_wise_solved") // [{rating, count}]
+  tagStats           Json?     @map("tag_stats")        // [{tag, solved}]
+  verdictStats       Json?     @map("verdict_stats")    // [{verdict, count}]
+  languageStats      Json?     @map("language_stats")   // [{language, count}]
+  recentSubmissions  Json?     @map("recent_submissions") // last 20 submissions summary
+
+  lastSynced         DateTime? @map("last_synced")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([rating])
+  @@index([maxRating])
+  @@index([codeforcesScore])
+  @@map("codeforces_stats")
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 model Activity {
   id            String   @id @default(uuid())

@@ -4,13 +4,8 @@ import { removeUser as removeUserFromLeaderboard } from './leaderboard.service.j
 import { validateLucyUsername } from '../utils/usernameValidation.js';
 import { redisClient, isRedisReady } from '../config/redis.js';
 import { lucyUsernameKey, LUCY_USERNAME_TTL } from '../utils/redisKeys.js';
+import { invalidateCFCache } from '../services/codeforces.service.js';
 
-/**
- * Service responsibilities:
- * - Handle business logic
- * - Communicate with the database
- * - Do NOT depend on Express req/res
- */
 
 export const findAllUsers = async () => {
   return await prisma.user.findMany({
@@ -42,7 +37,18 @@ export const createUser = async (userData) => {
 };
 
 export const updateUser = async (id, updateData) => {
-  const { name, college, department, leetcodeUsername, dailyGoal } = updateData;
+  const { name, college, department, leetcodeUsername, codeforcesUsername, dailyGoal } = updateData;
+
+  // Detect whether codeforcesUsername is actually changing so we can
+  // invalidate the CF stats cache when the handle is updated or cleared.
+  const currentUser = await prisma.user.findUnique({
+    where: { id },
+    select: { codeforcesUsername: true },
+  });
+
+  const cfHandleChanged =
+    codeforcesUsername !== undefined &&
+    codeforcesUsername !== (currentUser?.codeforcesUsername ?? null);
 
   // 1. Update user
   const user = await prisma.user.update({
@@ -52,6 +58,7 @@ export const updateUser = async (id, updateData) => {
       college: college !== undefined ? college : undefined,
       department: department !== undefined ? department : undefined,
       leetcodeUsername: leetcodeUsername !== undefined ? leetcodeUsername : undefined,
+      codeforcesUsername: codeforcesUsername !== undefined ? codeforcesUsername : undefined,
       dailyGoal: dailyGoal !== undefined ? dailyGoal : undefined,
     },
     select: {
@@ -61,6 +68,7 @@ export const updateUser = async (id, updateData) => {
       college: true,
       department: true,
       leetcodeUsername: true,
+      codeforcesUsername: true,
       lucyUsername: true,
       avatar: true,
       dailyGoal: true,
@@ -68,8 +76,14 @@ export const updateUser = async (id, updateData) => {
     },
   });
 
-  // 2. Invalidate dashboard cache
+  // 2. Invalidate dashboard cache (covers both LeetCode and Codeforces sections)
   await invalidateDashboardCache(id);
+
+  // 3. When the CF handle changes, also invalidate the per-user CF stats cache
+  //    so getCodeforcesStats() doesn't return stale data for the old handle.
+  if (cfHandleChanged) {
+    await invalidateCFCache(id);
+  }
 
   return user;
 };
@@ -225,12 +239,24 @@ export const getPublicProfileByUsername = async (username) => {
     return `${maskedName}@${domain}`;
   };
 
+  // Build the public profile response.
+  // Structure:
+  //   { user, stats (LeetCode), codeforces }
+  //
+  // - `stats` is null/zeroed when the user has never synced LeetCode.
+  // - `codeforces` is null when the user has never synced Codeforces.
+  // - Never exposes password, tokens, or private auth information.
   return {
-    ...dashboardData,
     user: {
       ...dashboardData.user,
       email: maskEmail(dashboardData.user?.email),
+      // Explicitly omit any sensitive fields that might be added to user in future
+      password: undefined,
     },
+    // LeetCode section — key name unchanged for backward compatibility
+    stats: dashboardData.stats,
+    // Codeforces section — null when not connected
+    codeforces: dashboardData.codeforces ?? null,
   };
 };
 

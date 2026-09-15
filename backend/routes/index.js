@@ -11,6 +11,7 @@ import aiMiscRoutes from './ai-misc.routes.js';
 import interviewRoutes from './interview.routes.js';
 import flashcardRoutes from './flashcard.routes.js';
 import leetcodeRoutes from './leetcode.routes.js';
+import codeforcesRoutes from './codeforces.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import leaderboardRoutes from './leaderboard.routes.js';
 import routineRoutes from './routine.routes.js';
@@ -49,6 +50,9 @@ router.get('/u/:username', userController.getPublicProfile);
 
 // Leetcode service routes
 router.use('/leetcode', leetcodeRoutes);
+
+// Codeforces service routes
+router.use('/codeforces', codeforcesRoutes);
 
 // Dashboard & Leaderboard (Redis-backed)
 router.use('/dashboard', dashboardRoutes);

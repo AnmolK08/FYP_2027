@@ -1,11 +1,14 @@
 import prisma from '../config/prisma.js';
 import { invalidateDashboardCache } from './dashboard.service.js';
-import { updateUserScore } from './leaderboard.service.js';
+import { updatePlatformScores, updateUserScore } from './leaderboard.service.js';
+import { calcLeetcodeScore, calcLucyScore } from '../utils/scoring.js';
 
 
 export const syncLeetcodeStats = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
+    // Also grab current CF score so we can recompute lucyScore
+    select: { leetcodeUsername: true, codeforcesStats: { select: { codeforcesScore: true } } },
   });
 
   if (!user || !user.leetcodeUsername) {
@@ -19,8 +22,18 @@ export const syncLeetcodeStats = async (userId) => {
   // storing in the db
   const stats = await persistLeetcodeData(userId, parsedData);
 
-  // Update Redis AFTER PostgreSQL succeeds
-  await postSyncRedisUpdates(userId, stats.universalScore);
+  // Compute lucyScore = leetcodeScore + current codeforcesScore
+  const currentCFScore = user.codeforcesStats?.codeforcesScore || 0;
+  const lucyScore      = calcLucyScore(stats.leetcodeScore, currentCFScore);
+
+  // Persist lucyScore on the User row
+  await prisma.user.update({
+    where: { id: userId },
+    data: { lucyScore },
+  });
+
+  // Update all three Redis ZSETs AFTER PostgreSQL succeeds
+  await postSyncRedisUpdates(userId, stats.universalScore, stats.leetcodeScore, currentCFScore, lucyScore);
 
   return stats;
 };
@@ -147,6 +160,14 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
 
   const universalScore = (ac['Easy'] || 0) * 1 + (ac['Medium'] || 0) * 3 + (ac['Hard'] || 0) * 6 + Math.floor((contest.rating || 0) * 0.5);
 
+  // Lucy V1: leetcodeScore uses the same formula (universalScore kept for compat)
+  const leetcodeScore = calcLeetcodeScore({
+    easy: ac['Easy'] || 0,
+    medium: ac['Medium'] || 0,
+    hard: ac['Hard'] || 0,
+    contestRating: contest.rating || 0,
+  });
+
   return {
     leetcodeUsername: mu.username,
     realName: mu.profile?.realName || '',
@@ -165,6 +186,7 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
     streak,
     activeDays,
     universalScore,
+    leetcodeScore,
   };
 };
 
@@ -190,6 +212,7 @@ export const persistLeetcodeData = async (userId, data) => {
       streak: data.streak,
       activeDays: data.activeDays,
       universalScore: data.universalScore,
+      leetcodeScore: data.leetcodeScore,
       lastSynced: new Date(),
     },
     create: {
@@ -211,6 +234,7 @@ export const persistLeetcodeData = async (userId, data) => {
       streak: data.streak,
       activeDays: data.activeDays,
       universalScore: data.universalScore,
+      leetcodeScore: data.leetcodeScore,
       lastSynced: new Date(),
     },
   });
@@ -237,17 +261,25 @@ export const persistLeetcodeData = async (userId, data) => {
 };
 
 //helper function for updating the redis cache after the leetcode data is synced
-export const postSyncRedisUpdates = async (userId, universalScore) => {
+export const postSyncRedisUpdates = async (userId, universalScore, leetcodeScore = 0, codeforcesScore = 0, lucyScore = 0) => {
   try {
     await invalidateDashboardCache(userId);
   } catch (err) {
     console.error('[LeetCode] Dashboard cache invalidation failed:', err.message);
   }
 
+  // Legacy: keep leaderboard:global in sync so old code paths still work
   try {
     await updateUserScore(userId, universalScore);
   } catch (err) {
-    console.error('[LeetCode] Leaderboard update failed:', err.message);
+    console.error('[LeetCode] Legacy leaderboard update failed:', err.message);
+  }
+
+  // V1: push all three platform ZSETs
+  try {
+    await updatePlatformScores(userId, { leetcodeScore, codeforcesScore, lucyScore });
+  } catch (err) {
+    console.error('[LeetCode] Platform leaderboard update failed:', err.message);
   }
 };
 
