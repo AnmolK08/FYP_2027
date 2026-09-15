@@ -45,6 +45,7 @@ export const buildDashboardDTO = async (userId) => {
       college: true,
       department: true,
       leetcodeUsername: true,
+      lucyUsername: true,
       avatar: true,
       leetcodeStats: {
         select: {
@@ -83,6 +84,7 @@ export const buildDashboardDTO = async (userId) => {
       college: user.college,
       department: user.department,
       leetcodeUsername: user.leetcodeUsername,
+      lucyUsername: user.lucyUsername,
       avatar: user.avatar,
     },
     stats: {

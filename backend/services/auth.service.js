@@ -7,6 +7,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from '../utils/token.js';
+import { normalizeCandidateUsername } from '../utils/usernameValidation.js';
 
 const sanitizeUser = (user) => {
   if (!user) return null;
@@ -17,6 +18,7 @@ const sanitizeUser = (user) => {
     college: user.college || null,
     department: user.department || null,
     leetcodeUsername: user.leetcodeUsername || null,
+    lucyUsername: user.lucyUsername || null,
     avatar: user.avatar || null,
     dailyGoal: user.dailyGoal ?? 3,
   };
@@ -75,6 +77,19 @@ export const registerUser = async (userData) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Derive initial lucyUsername from leetcodeUsername or name
+  let candidateUsername = normalizeCandidateUsername(leetcodeUsername || name || 'user');
+  let suffix = 1;
+  while (true) {
+    const existing = await prisma.user.findUnique({
+      where: { lucyUsername: candidateUsername },
+    });
+    if (!existing) break;
+    const base = normalizeCandidateUsername(leetcodeUsername || name || 'user').slice(0, 20 - String(suffix).length - 1);
+    candidateUsername = `${base}_${suffix}`;
+    suffix++;
+  }
+
   const user = await prisma.user.create({
     data: {
       id: uuidv4(),
@@ -84,6 +99,7 @@ export const registerUser = async (userData) => {
       college: college || null,
       department: department || null,
       leetcodeUsername: leetcodeUsername || null,
+      lucyUsername: candidateUsername,
     },
   });
 

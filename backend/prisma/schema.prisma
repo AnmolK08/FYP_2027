@@ -20,6 +20,7 @@ model User {
   college            String?
   department         String?
   leetcodeUsername   String?  @map("leetcode_username")
+  lucyUsername       String?  @unique @map("lucy_username")
   avatar             String?
   dailyGoal          Int      @default(3) @map("daily_goal")
   createdAt          DateTime @default(now()) @map("created_at")

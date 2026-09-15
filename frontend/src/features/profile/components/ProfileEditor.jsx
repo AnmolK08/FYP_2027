@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X } from 'lucide-react';
-import { useUpdateProfile } from '../hooks/useUserStats';
+import { X, Check, AlertCircle } from 'lucide-react';
+import { useUpdateProfile, useUpdateLucyUsername } from '../hooks/useUserStats';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
+
+const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 
 export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) {
   const [form, setForm] = useState({
@@ -12,10 +15,13 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
     college: profile?.college || '',
     department: profile?.department || '',
     leetcodeUsername: profile?.leetcodeUsername || '',
+    lucyUsername: profile?.lucyUsername || '',
   });
+  const [usernameError, setUsernameError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const updateProfileMutation = useUpdateProfile();
+  const updateLucyUsernameMutation = useUpdateLucyUsername();
 
   useEffect(() => {
     if (profile) {
@@ -24,18 +30,62 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
         college: profile.college || '',
         department: profile.department || '',
         leetcodeUsername: profile.leetcodeUsername || '',
+        lucyUsername: profile.lucyUsername || '',
       });
+      setUsernameError('');
     }
   }, [profile]);
 
+  const handleUsernameChange = (e) => {
+    const val = e.target.value.toLowerCase().replace(/\s+/g, '');
+    setForm((prev) => ({ ...prev, lucyUsername: val }));
+    setUsernameError('');
+
+    if (val && !USERNAME_REGEX.test(val)) {
+      if (val.length < 3) {
+        setUsernameError('Username must be at least 3 characters');
+      } else if (val.length > 20) {
+        setUsernameError('Username must be at most 20 characters');
+      } else {
+        setUsernameError('Only lowercase letters (a-z), numbers (0-9), and underscores (_) allowed');
+      }
+    }
+  };
+
   const save = async () => {
+    // Validate lucyUsername if changed
+    const usernameChanged = form.lucyUsername !== (profile?.lucyUsername || '');
+    if (usernameChanged) {
+      if (!USERNAME_REGEX.test(form.lucyUsername)) {
+        setUsernameError('Username must be 3-20 lowercase alphanumeric characters or underscores');
+        return;
+      }
+    }
+
     setSaving(true);
+    setUsernameError('');
+
     try {
-      await updateProfileMutation.mutateAsync(form);
+      // 1. If lucyUsername changed, update via dedicated authenticated API
+      if (usernameChanged) {
+        await updateLucyUsernameMutation.mutateAsync(form.lucyUsername);
+      }
+
+      // 2. Update general profile info (name, college, dept, leetcodeUsername)
+      await updateProfileMutation.mutateAsync({
+        name: form.name,
+        college: form.college,
+        department: form.department,
+        leetcodeUsername: form.leetcodeUsername,
+      });
+
       onOpenChange(false);
       onSaved?.();
     } catch (e) {
-      // Error is handled in useUpdateProfile toast notification
+      const msg = e.message || 'Update failed';
+      if (e.status === 409 || msg.toLowerCase().includes('already taken') || msg.toLowerCase().includes('conflict')) {
+        setUsernameError(msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -87,6 +137,37 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
 
         {/* Fields */}
         <div className="grid gap-3">
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-muted-foreground text-xs font-mono-display uppercase tracking-widest">
+                Lucy Username
+              </Label>
+              <span className="text-[11px] text-muted-foreground font-mono-display">
+                /u/{form.lucyUsername || '...'}
+              </span>
+            </div>
+            <div className="relative mt-1.5">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-mono-display text-sm select-none">
+                @
+              </span>
+              <Input
+                value={form.lucyUsername}
+                onChange={handleUsernameChange}
+                data-testid="edit-lucy-username"
+                className={`pl-8 h-10 font-mono-display ${usernameError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                placeholder="username"
+              />
+            </div>
+            {usernameError ? (
+              <p className="text-xs text-destructive mt-1 font-medium flex items-center gap-1">
+                <AlertCircle size={12} /> {usernameError}
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground mt-1">
+                3–20 lowercase letters, numbers, or underscores. Sets your public profile URL.
+              </p>
+            )}
+          </div>
           <Field label="Name" v={form.name} onChange={set('name')} tid="edit-name" />
           <Field label="College" v={form.college} onChange={set('college')} tid="edit-college" />
           <Field label="Department" v={form.department} onChange={set('department')} tid="edit-department" />

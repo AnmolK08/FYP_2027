@@ -77,6 +77,7 @@ export const getLeaderboard = async (page = 1, limit = 20, requestingUserId = nu
             college: profile.college || null,
             department: profile.department || null,
             leetcodeUsername: profile.leetcodeUsername || null,
+            lucyUsername: profile.lucyUsername || null,
             totalSolved: profile.leetcodeStats?.totalSolved || 0,
             easy: profile.leetcodeStats?.easy || 0,
             medium: profile.leetcodeStats?.medium || 0,
@@ -211,6 +212,7 @@ const batchFetchProfiles = async (userIds) => {
       college: true,
       department: true,
       leetcodeUsername: true,
+      lucyUsername: true,
       leetcodeStats: {
         select: {
           totalSolved: true,
@@ -256,6 +258,7 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
             college: true,
             department: true,
             leetcodeUsername: true,
+            lucyUsername: true,
           },
         },
       },
@@ -273,6 +276,7 @@ const getLeaderboardFromDatabase = async (page, limit, requestingUserId) => {
     college: entry.user?.college || null,
     department: entry.user?.department || null,
     leetcodeUsername: entry.user?.leetcodeUsername || null,
+    lucyUsername: entry.user?.lucyUsername || null,
     totalSolved: entry.totalSolved || 0,
     easy: entry.easy || 0,
     medium: entry.medium || 0,

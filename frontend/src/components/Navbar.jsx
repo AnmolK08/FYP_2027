@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, Menu, X, Brain, BookOpen, Flame, Code2, FileText, Layers, TrendingUp, Zap, Map, ChevronDown, Target, Briefcase, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, Menu, X, Brain, BookOpen, Flame, Code2, FileText, Layers, TrendingUp, Zap, Map, ChevronDown, Target, Briefcase, GraduationCap, User } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -114,7 +114,7 @@ export default function Navbar() {
                     <div className="hidden md:flex flex-col items-start leading-tight">
                       <span className="text-sm font-medium">{profile?.name}</span>
                       <span className="text-xs text-muted-foreground font-mono-display">
-                        {profile?.leetcodeUsername || 'no handle'}
+                        @{profile?.lucyUsername || profile?.leetcodeUsername || 'user'}
                       </span>
                     </div>
                   </Button>
@@ -122,6 +122,15 @@ export default function Navbar() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to={`/u/${profile?.lucyUsername || profile?.leetcodeUsername || ''}`}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <User size={14} />
+                      <span>Public Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="flex items-center gap-2">
                     <div className="text-xs text-muted-foreground">
                       {profile?.college && `${profile.college}`}

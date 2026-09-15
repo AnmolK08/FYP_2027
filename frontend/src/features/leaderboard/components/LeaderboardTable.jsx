@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Medal } from 'lucide-react';
 
@@ -59,20 +60,45 @@ export default function LeaderboardTable({ rows, loading }) {
               </td>
               <td className="px-5 py-4">
                 <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8 border border-border">
-                    <AvatarImage src={r.avatar} alt={r.name} />
-                    <AvatarFallback>{r.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  <Link
+                    to={`/u/${r.lucyUsername || r.leetcodeUsername || r.userId}`}
+                    className="hover:opacity-80 transition-opacity"
+                    title={`View ${r.name}'s profile`}
+                  >
+                    <Avatar className="h-8 w-8 border border-border cursor-pointer">
+                      <AvatarImage src={r.avatar} alt={r.name} />
+                      <AvatarFallback>{r.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Link>
                   <div>
-                    <div className="font-medium text-foreground">
-                      {r.name}
+                    <div className="flex items-center">
+                      <Link
+                        to={`/u/${r.lucyUsername || r.leetcodeUsername || r.userId}`}
+                        className="font-medium text-foreground hover:text-primary hover:underline transition-colors"
+                        title={`View ${r.name}'s profile`}
+                      >
+                        {r.name}
+                      </Link>
                       {r.is_me && (
                         <span className="ml-2 text-[10px] uppercase font-mono-display tracking-widest text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded">
                           you
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono-display">{r.leetcodeUsername || '-'}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-mono-display">
+                      <Link
+                        to={`/u/${r.lucyUsername || r.leetcodeUsername || r.userId}`}
+                        className="text-muted-foreground hover:text-primary hover:underline transition-colors"
+                        title={`View @${r.lucyUsername || r.leetcodeUsername} profile`}
+                      >
+                        @{r.lucyUsername || r.leetcodeUsername || '-'}
+                      </Link>
+                      {r.leetcodeUsername && r.lucyUsername && r.leetcodeUsername.toLowerCase() !== r.lucyUsername.toLowerCase() && (
+                        <span className="text-[10px] text-muted-foreground/60">
+                          (lc: {r.leetcodeUsername})
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </td>

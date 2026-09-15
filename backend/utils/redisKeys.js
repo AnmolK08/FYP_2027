@@ -50,3 +50,7 @@ export const leaderboardTempKey = (type = 'global', identifier = null) => {
 export const syncLockKey = (userId) => `lock:leetcode:sync:${userId}`;
 
 export const SYNC_LOCK_TTL = 120;
+
+// lucyUsername → userId mapping key (avoids DB lookup on every profile view)
+export const lucyUsernameKey = (lucyUsername) => `lucy:username:${lucyUsername.toLowerCase()}`;
+export const LUCY_USERNAME_TTL = 600; // 10 minutes

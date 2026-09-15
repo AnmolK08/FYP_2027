@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import {
   RefreshCw, Trophy, Award, Flame, Crown, Medal, Target, Mountain,
-  Shield, Star, Zap, Swords, ExternalLink, Settings2,
+  Shield, Star, Zap, Swords, ExternalLink, Settings2, Copy, Check,
 } from 'lucide-react';
 import ProfileEditor from '../../features/profile/components/ProfileEditor';
 
@@ -56,6 +56,7 @@ const DEMO_STATS = {
 export default function DashboardPage() {
   const { user, profile, refreshProfile } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { data: dashboardData, isLoading: statsLoading } = useDashboard();
   const syncLeetCode = useSyncLeetCode();
 
@@ -73,6 +74,15 @@ export default function DashboardPage() {
     } catch (e) {
       // Handled in useSyncLeetCode toast notification
     }
+  };
+
+  const handleCopyLink = () => {
+    const handle = profile?.lucyUsername || profile?.leetcodeUsername || 'user';
+    const url = `${window.location.origin}/u/${handle}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    toast.success(`Profile link copied: /u/${handle}`);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const displayStats = useMemo(() => {
@@ -138,17 +148,28 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-14">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
             <div>
-              <div className="text-overline">Welcome back</div>
+              <div className="text-overline h-4 flex items-center">Welcome back</div>
               <h1 className="font-heading text-3xl lg:text-5xl tracking-tight text-foreground mt-2">
                 {profile?.name?.split(' ')[0] || 'Student'}&apos;s Sphere
               </h1>
-              <p className="text-muted-foreground mt-2 text-sm">
-                <span className="font-mono-display">{profile?.leetcodeUsername || 'no leetcode handle'}</span>
-                {profile?.college && <span> - {profile.college}</span>}
-                {profile?.department && <span> - {profile.department}</span>}
-              </p>
+              <div className="text-muted-foreground mt-2 text-sm flex flex-wrap items-center gap-2">
+                  <span className="font-mono-display font-medium text-foreground bg-muted/80 px-2 py-0.5 rounded border border-border">
+                    @{profile?.lucyUsername || profile?.leetcodeUsername || 'no handle'}
+                  </span>
+                  {profile?.college && <span>• {profile.college}</span>}
+                  {profile?.department && <span> - {profile.department}</span>}
+                </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 h-9">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                className="gap-2 h-9 font-mono-display text-xs"
+              >
+                {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                {copied ? 'Copied Link' : 'Share /u/' + (profile?.lucyUsername || profile?.leetcodeUsername || 'user')}
+              </Button>
               <button
                 type="button"
                 onClick={() => {
@@ -156,13 +177,13 @@ export default function DashboardPage() {
                   setEditOpen(true);
                 }}
                 data-testid="open-profile-editor"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-background text-foreground text-sm hover:bg-muted transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-background text-foreground text-sm hover:bg-muted transition-colors h-9"
               >
                 <Settings2 size={15} strokeWidth={1.5} /> Edit profile
               </button>
               {console.log('RENDER: editOpen =', editOpen)}
               <ProfileEditor profile={profile} onSaved={() => { refreshProfile(); }} open={editOpen} onOpenChange={setEditOpen} />
-              <Button onClick={handleSync} disabled={syncing} data-testid="sync-leetcode" className="bg-primary text-primary-foreground">
+              <Button size="sm" onClick={handleSync} disabled={syncing} data-testid="sync-leetcode" className="bg-primary text-primary-foreground h-9">
                 <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
                 {syncing ? 'Syncing...' : 'Sync LeetCode'}
               </Button>

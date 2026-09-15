@@ -17,6 +17,7 @@ import routineRoutes from './routine.routes.js';
 
 import * as interviewController from '../controllers/interview.controller.js';
 import * as aiMiscController from '../controllers/ai-misc.controller.js';
+import * as userController from '../controllers/user.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -42,6 +43,9 @@ router.get('/sd/topics', authenticate, interviewController.getSystemDesignTopics
 router.get('/system-design', authenticate, interviewController.getSystemDesignTopics);
 router.get('/tracks', authenticate, interviewController.getTracks);
 router.get('/quiz/flashcards', authenticate, aiMiscController.getFlashcards);
+
+// Public profile route alias
+router.get('/u/:username', userController.getPublicProfile);
 
 // Leetcode service routes
 router.use('/leetcode', leetcodeRoutes);

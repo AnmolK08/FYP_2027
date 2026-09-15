@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import { useLeaderboard, useMyLeaderboardRank } from '../../features/leaderboard/hooks/useLeaderboard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -102,12 +103,30 @@ function PodiumCard({ row, place, featured }) {
       <div className="flex items-center gap-1 text-overline">
         {place === 1 && <Trophy size={14} className="text-amber-500" />} #{place}
       </div>
-      <Avatar className="h-14 w-14 border border-border mt-3">
-        <AvatarImage src={row.avatar} alt={row.name} />
-        <AvatarFallback>{row.name.charAt(0)}</AvatarFallback>
-      </Avatar>
-      <div className="font-heading text-foreground mt-2">{row.name}</div>
-      <div className="text-xs text-muted-foreground font-mono-display">{row.leetcodeUsername || '-'}</div>
+      <Link
+        to={`/u/${row.lucyUsername || row.leetcodeUsername || row.userId}`}
+        className="mt-3 hover:opacity-80 transition-opacity"
+        title={`View ${row.name}'s profile`}
+      >
+        <Avatar className="h-14 w-14 border border-border cursor-pointer">
+          <AvatarImage src={row.avatar} alt={row.name} />
+          <AvatarFallback>{row.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+      </Link>
+      <Link
+        to={`/u/${row.lucyUsername || row.leetcodeUsername || row.userId}`}
+        className="font-heading text-foreground mt-2 hover:text-primary hover:underline transition-colors"
+        title={`View ${row.name}'s profile`}
+      >
+        {row.name}
+      </Link>
+      <Link
+        to={`/u/${row.lucyUsername || row.leetcodeUsername || row.userId}`}
+        className="text-xs text-muted-foreground font-mono-display hover:text-primary hover:underline transition-colors"
+        title={`View @${row.lucyUsername || row.leetcodeUsername} profile`}
+      >
+        @{row.lucyUsername || row.leetcodeUsername || '-'}
+      </Link>
       <div className="text-xs text-muted-foreground mt-1">{row.college}</div>
       <div className="mt-3 font-heading text-2xl text-foreground">{Math.round(row.universalScore || 0)}</div>
       <div className="text-xs text-muted-foreground font-mono-display mt-1">

@@ -20,9 +20,9 @@ import {
 
 const mainNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/routine', label: 'Routine Tracker', icon: CalendarCheck, badge: 'new' },
   { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/knowledge', label: 'Knowledge', icon: BookOpen, badge: 'new' },
+  { href: '/routine', label: 'Routine Tracker', icon: CalendarCheck, badge: 'new' },
 ];
 
 const practiceItems = [
@@ -130,41 +130,65 @@ export default function Sidebar() {
           {isExpanded && <span className="text-sm">Theme</span>}
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={`h-9 px-2 gap-3 ${isExpanded ? 'w-full justify-start' : 'w-9 justify-center'}`}>
-              <Avatar className="h-6 w-6 shrink-0">
-                <AvatarImage src={profile?.avatar} alt={profile?.name} />
-                <AvatarFallback>
-                  {profile?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              {isExpanded && (
-                <div className="flex flex-col items-start leading-tight min-w-0 overflow-hidden">
-                  <span className="text-sm font-medium truncate w-full text-left">{profile?.name}</span>
-                </div>
-              )}
+        {!user ? (
+          <Link to="/login" className="w-full">
+            <Button
+              variant="outline"
+              size={isExpanded ? 'default' : 'icon'}
+              className={`h-9 border-border ${isExpanded ? 'w-full justify-start gap-3 px-3' : 'w-9'}`}
+              title="Sign in"
+            >
+              <LogOut size={16} className="shrink-0 rotate-180" />
+              {isExpanded && <span className="text-sm">Sign in</span>}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align={isExpanded ? "end" : "start"} side="right" className="w-56 bg-card">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="flex flex-col items-start px-2 py-1.5 cursor-default">
-              <div className="text-xs text-muted-foreground font-mono-display">
-                {profile?.leetcodeUsername || 'no handle'}
+          </Link>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className={`h-9 px-2 gap-3 ${isExpanded ? 'w-full justify-start' : 'w-9 justify-center'}`}>
+                <Avatar className="h-6 w-6 shrink-0">
+                  <AvatarImage src={profile?.avatar} alt={profile?.name} />
+                  <AvatarFallback>
+                    {profile?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {isExpanded && (
+                  <div className="flex flex-col items-start leading-tight min-w-0 overflow-hidden">
+                    <span className="text-sm font-medium truncate w-full text-left">{profile?.name}</span>
+                  </div>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={isExpanded ? "end" : "start"} side="right" className="w-56 bg-card">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="flex flex-col items-start px-2 py-1.5 cursor-default">
+                <div className="text-xs text-foreground font-mono-display font-medium">
+                  @{profile?.lucyUsername || profile?.leetcodeUsername || 'user'}
+                </div>
+                {profile?.leetcodeUsername && profile?.lucyUsername && profile.leetcodeUsername.toLowerCase() !== profile.lucyUsername.toLowerCase() && (
+                  <div className="text-[11px] text-muted-foreground font-mono-display">
+                    lc: {profile.leetcodeUsername}
+                  </div>
+                )}
+                <div className="text-xs text-muted-foreground mt-1">
+                  {profile?.college && `${profile.college}`}
+                  {profile?.department && ` · ${profile.department}`}
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {profile?.college && `${profile.college}`}
-                {profile?.department && ` · ${profile.department}`}
-              </div>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => { signOut(); navigate('/'); }} className="text-destructive cursor-pointer">
-              <LogOut size={14} className="mr-2" />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to={`/u/${profile?.lucyUsername || profile?.leetcodeUsername || ''}`} className="flex items-center gap-2 cursor-pointer">
+                  <span>Public Profile</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { signOut(); navigate('/'); }} className="text-destructive cursor-pointer">
+                <LogOut size={14} className="mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </aside>
   );

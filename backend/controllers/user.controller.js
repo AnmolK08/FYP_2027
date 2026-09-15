@@ -71,3 +71,32 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getPublicProfile = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const profile = await userService.getPublicProfileByUsername(username);
+    res.status(200).json(profile);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    next(error);
+  }
+};
+
+export const updateLucyUsername = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { username } = req.body;
+    const updatedUser = await userService.updateLucyUsername(userId, username);
+    res.status(200).json({ success: true, user: updatedUser });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    next(error);
+  }
+};
+
+

@@ -19,6 +19,7 @@ import ResumePage from '../pages/Resume/ResumePage';
 import SystemDesignPage from '../pages/SystemDesign/SystemDesignPage';
 import TracksPage from '../pages/Tracks/TracksPage';
 import RoutinePage from '../pages/Routine/RoutinePage';
+import ProfilePage from '../pages/Profile/ProfilePage';
 
 import ProtectedRoute from './ProtectedRoute';
 
@@ -45,6 +46,7 @@ export default function AppRoutes() {
       <Route path="/sd" element={<SystemDesignPage />} />
       <Route path="/tracks" element={<TracksPage />} />
       <Route path="/routine" element={<RoutinePage />} />
+      <Route path="/u/:username" element={<ProfilePage />} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -127,3 +127,34 @@ export function useUpdateProfile() {
     },
   });
 }
+
+export function useUpdateLucyUsername() {
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (username) => {
+      if (!user) throw new Error('Not authenticated');
+      const data = await api.updateLucyUsername(username);
+      return data.user || data;
+    },
+    onMutate: () => {
+      const toastId = toast.loading('Updating Lucy username...');
+      return { toastId };
+    },
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      queryClient.invalidateQueries({ queryKey: ['auth/me'] });
+      toast.success('Lucy username updated successfully!', {
+        id: context?.toastId,
+      });
+    },
+    onError: (err, variables, context) => {
+      toast.error(err.message || 'Failed to update username. Please try another.', {
+        id: context?.toastId,
+      });
+    },
+  });
+}
+

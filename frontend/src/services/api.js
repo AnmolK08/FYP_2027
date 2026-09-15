@@ -36,6 +36,17 @@ export const api = {
     return apiClient('/dashboard');
   },
 
+  async getPublicProfile(username) {
+    return apiClient(`/u/${encodeURIComponent(username)}`);
+  },
+
+  async updateLucyUsername(username) {
+    return apiClient('/users/username', {
+      method: 'PATCH',
+      body: { username },
+    });
+  },
+
   async syncLeetCode() {
     return apiClient('/leetcode/sync', { method: 'POST' });
   },
