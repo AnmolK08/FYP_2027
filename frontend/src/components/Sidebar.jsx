@@ -31,15 +31,15 @@ const practiceItems = [
   { href: '/predictor', label: 'Contest Predictor', icon: TrendingUp },
 ];
 
-const careerItems = [
-  { href: '/resume', label: 'Resume ATS', icon: FileText },
-  { href: '/interview', label: 'Mock Interview', icon: Code2, badge: 'new' },
-  { href: '/system-design', label: 'System Design', icon: Code2 },
-];
+// const careerItems = [
+//   { href: '/resume', label: 'Resume ATS', icon: FileText },
+//   { href: '/interview', label: 'Mock Interview', icon: Code2, badge: 'new' },
+//   { href: '/system-design', label: 'System Design', icon: Code2 },
+// ];
 
 const learningItems = [
-  { href: '/mentor', label: 'AI Mentor', icon: Brain, badge: 'new' },
-  { href: '/streaks', label: 'Streaks', icon: Flame },
+  // { href: '/mentor', label: 'AI Mentor', icon: Brain, badge: 'new' },
+  // { href: '/streaks', label: 'Streaks', icon: Flame },
   { href: '/tracks', label: 'Learning Tracks', icon: Map },
 ];
 
@@ -113,7 +113,7 @@ export default function Sidebar() {
       <div className={`flex-1 overflow-y-auto overflow-x-hidden pb-4 custom-scrollbar ${isExpanded ? 'px-3' : 'px-2 flex flex-col items-center'}`}>
         {renderNavGroup('Main', mainNavItems)}
         {renderNavGroup('Practice', practiceItems)}
-        {renderNavGroup('Career', careerItems)}
+        {/* {renderNavGroup('Career', careerItems)} */}
         {renderNavGroup('Learning', learningItems)}
       </div>
 
