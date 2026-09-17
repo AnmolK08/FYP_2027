@@ -8,6 +8,7 @@ import routes from './routes/index.js';
 import { connectRedis } from './config/redis.js';
 import { initSyncQueue } from './queues/leetcodeSync.queue.js';
 import { startSyncWorker } from './workers/leetcodeSync.worker.js';
+import { startDailySyncCron } from './cron/dailySync.cron.js';
 
 dotenv.config();
 
@@ -97,6 +98,9 @@ const start = async () => {
   // Initialise BullMQ queue & worker (requires Redis)
   initSyncQueue();
   startSyncWorker();
+
+  // Register the daily platform sync cron (04:00 AM IST)
+  startDailySyncCron();
 
   app.listen(PORT, () => {
     console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
