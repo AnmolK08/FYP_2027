@@ -152,7 +152,7 @@ export default function DashboardPage() {
                     profile?.leetcodeUsername ||
                     "no handle"}
                 </span>
-                {profile?.college && <span>• {profile.college}</span>}
+                {profile?.college && <span>• {profile.college.toUpperCase()}</span>}
                 {profile?.department && <span> - {profile.department}</span>}
               </div>
             </div>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
             <PlatformTab
               active={platform === "codeforces"}
               onClick={() => setPlatform("codeforces")}
-              icon={<Cpu size={14} />}
+              icon={<Swords size={14} />}
               label="Codeforces"
               connected={!!profile?.codeforcesUsername}
             />
@@ -251,7 +251,7 @@ export default function DashboardPage() {
   );
 }
 
-function PlatformTab({ active, onClick, icon, label, connected }) {
+export function PlatformTab({ active, onClick, icon, label, connected, isPublic }) {
   return (
     <button
       role="tab"
@@ -264,7 +264,7 @@ function PlatformTab({ active, onClick, icon, label, connected }) {
     >
       {icon}
       {label}
-      {!connected && (
+      {!connected && !isPublic && (
         <span className="ml-1 text-[9px] uppercase font-mono-display tracking-widest text-muted-foreground border border-border rounded px-1">
           connect
         </span>
@@ -273,7 +273,7 @@ function PlatformTab({ active, onClick, icon, label, connected }) {
   );
 }
 
-function LeetCodeView({ data, profile }) {
+export function LeetCodeView({ data, profile, isPublic }) {
   const connected = data?.connected;
   const synced = data?.synced;
   const stats = data?.stats;
@@ -319,8 +319,9 @@ function LeetCodeView({ data, profile }) {
     return (
       <ConnectPrompt
         platform="LeetCode"
-        message="Set your LeetCode handle in your profile to start tracking your progress."
+        message={isPublic ? "This student hasn't connected their LeetCode account yet." : "Set your LeetCode handle in your profile to start tracking your progress."}
         testid="lc-connect-prompt"
+        isPublic={isPublic}
       />
     );
   }
@@ -330,8 +331,9 @@ function LeetCodeView({ data, profile }) {
     return (
       <SyncPrompt
         platform="LeetCode"
-        message="Click 'Sync LeetCode' to pull your stats for the first time."
+        message={isPublic ? "This student hasn't synced their stats yet." : "Click 'Sync LeetCode' to pull your stats for the first time."}
         testid="lc-sync-prompt"
+        isPublic={isPublic}
       />
     );
   }
@@ -492,7 +494,7 @@ function LeetCodeView({ data, profile }) {
   );
 }
 
-function CodeforcesView({ data, profile }) {
+export function CodeforcesView({ data, profile, isPublic }) {
   const connected = data?.connected;
   const synced = data?.synced;
   const stats = data?.stats;
@@ -501,8 +503,9 @@ function CodeforcesView({ data, profile }) {
     return (
       <ConnectPrompt
         platform="Codeforces"
-        message="Set your Codeforces handle in your profile to start tracking your competitive programming stats."
+        message={isPublic ? "This student hasn't connected their Codeforces account yet." : "Set your Codeforces handle in your profile to start tracking your competitive programming stats."}
         testid="cf-connect-prompt"
+        isPublic={isPublic}
       />
     );
   }
@@ -511,8 +514,9 @@ function CodeforcesView({ data, profile }) {
     return (
       <SyncPrompt
         platform="Codeforces"
-        message="Click 'Sync Codeforces' to pull your stats for the first time."
+        message={isPublic ? "This student hasn't synced their stats yet." : "Click 'Sync Codeforces' to pull your stats for the first time."}
         testid="cf-sync-prompt"
+        isPublic={isPublic}
       />
     );
   }
@@ -620,7 +624,7 @@ function CodeforcesView({ data, profile }) {
   );
 }
 
-function ConnectPrompt({ platform, message, testid }) {
+function ConnectPrompt({ platform, message, testid, isPublic }) {
   return (
     <div
       className="mt-14 flex flex-col items-center text-center gap-4"
@@ -641,14 +645,16 @@ function ConnectPrompt({ platform, message, testid }) {
           {message}
         </div>
       </div>
-      <div className="text-xs font-mono-display text-muted-foreground">
-        Click <strong>Edit profile</strong> to add your handle.
-      </div>
+      {!isPublic && (
+        <div className="text-xs font-mono-display text-muted-foreground">
+          Click <strong>Edit profile</strong> to add your handle.
+        </div>
+      )}
     </div>
   );
 }
 
-function SyncPrompt({ platform, message, testid }) {
+function SyncPrompt({ platform, message, testid, isPublic }) {
   return (
     <div
       className="mt-14 flex flex-col items-center text-center gap-4"
