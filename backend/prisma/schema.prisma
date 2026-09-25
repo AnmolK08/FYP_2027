@@ -66,9 +66,8 @@ model LeetcodeStats {
   streak           Int      @default(0)
   activeDays       Int      @default(0) @map("active_days")
   universalScore   Float    @default(0) @map("universal_score")
-  // Lucy V1: leetcodeScore replaces/parallels universalScore for the
-  // platform-specific leaderboard. universalScore is kept for backward compat.
   leetcodeScore    Float    @default(0) @map("leetcode_score")
+  badges           Json?
   lastSynced       DateTime? @map("last_synced")
   createdAt        DateTime @default(now()) @map("created_at")
 

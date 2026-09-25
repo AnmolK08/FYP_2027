@@ -59,6 +59,20 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
               intermediate { tagName problemsSolved }
               fundamental { tagName problemsSolved }
             }
+            badges {
+              id
+              displayName
+              shortName
+              icon
+              medal { slug config { iconGif iconGifBackground } }
+              creationDate
+              category
+            }
+            upcomingBadges {
+              name
+              icon
+              progress
+            }
           }
           userContestRanking(username: $username) {
             attendedContestsCount rating globalRanking topPercentage
@@ -184,6 +198,8 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
     activeDays,
     universalScore,
     leetcodeScore,
+    badges: mu.badges || [],
+    upcomingBadges: mu.upcomingBadges || [],
   };
 };
 
@@ -209,6 +225,7 @@ export const persistLeetcodeData = async (userId, data) => {
       activeDays: data.activeDays,
       universalScore: data.universalScore,
       leetcodeScore: data.leetcodeScore,
+      badges: data.badges ?? [],
       lastSynced: new Date(),
     },
     create: {
@@ -231,6 +248,7 @@ export const persistLeetcodeData = async (userId, data) => {
       activeDays: data.activeDays,
       universalScore: data.universalScore,
       leetcodeScore: data.leetcodeScore,
+      badges: data.badges ?? [],
       lastSynced: new Date(),
     },
   });

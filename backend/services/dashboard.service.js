@@ -67,6 +67,7 @@ export const buildDashboardDTO = async (userId) => {
           universalScore: true,
           ratingHistory: true,
           submissionCalendar: true,
+          badges: true,
           lastSynced: true,
         },
       },
@@ -164,6 +165,7 @@ export const buildDashboardDTO = async (userId) => {
       universalScore:   lcStats.universalScore   || 0,
       ratingHistory:    lcStats.ratingHistory    || [],
       submissionCalendar: lcStats.submissionCalendar || {},
+      badges:           lcStats.badges           || [],
       lastSynced:       lcStats.lastSynced       || null,
     },
     // Codeforces stats — separate key, null when not connected/synced
@@ -305,7 +307,7 @@ export const buildLeetcodeDashboardDTO = async (userId) => {
           streak: true, activeDays: true,
           universalScore: true, leetcodeScore: true,
           ratingHistory: true, submissionCalendar: true,
-          tags: true, lastSynced: true,
+          tags: true, badges: true, lastSynced: true,
         },
       },
     },
@@ -345,6 +347,7 @@ export const buildLeetcodeDashboardDTO = async (userId) => {
       ratingHistory:     lc.ratingHistory     || [],
       submissionCalendar: lc.submissionCalendar || {},
       tags:              lc.tags              || [],
+      badges:            lc.badges            || [],
       lastSynced:        lc.lastSynced        || null,
     } : null,
   };
