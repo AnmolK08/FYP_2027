@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, Menu, X, Brain, BookOpen, Flame, Code2, FileText, Layers, TrendingUp, Zap, Map, ChevronDown, Target, Briefcase, GraduationCap, User } from 'lucide-react';
+import { LayoutDashboard, Trophy, LogOut, Moon, Sun, Menu, X, Brain, BookOpen, Flame, Code2, FileText, Layers, TrendingUp, Zap, Map, ChevronDown, Target, Briefcase, GraduationCap, User } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -59,9 +59,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 md:px-12 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Sparkles size={16} strokeWidth={1.75} />
-            </span>
+            <img src="/favicon.png" alt="Lucy Logo" className="h-7 w-7 rounded-full object-contain shrink-0 ring-1 ring-border" />
             <span className="font-heading text-lg tracking-tight">Lucy</span>
           </Link>
 

@@ -1,29 +1,31 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart3, Trophy, Brain, Code2, Check, BookOpen, Target } from 'lucide-react';
+import { ArrowRight, BarChart3, Trophy, Layers, Zap, TrendingUp, CalendarCheck, Check, BookOpen, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const FEATURES = [
-  { icon: BarChart3, title: 'Unified Analytics', desc: 'All your LeetCode stats — solved counts, contest ratings, difficulty mix, streaks — in one focused view.' },
-  { icon: Trophy, title: 'College Leaderboard', desc: 'Compete with peers from your college and department. Climb a normalized universal score.' },
-  { icon: Brain, title: 'AI Mentor', desc: 'A persistent assistant that learns from your submission history and proposes a focus plan.', badge: 'new' },
-  { icon: Code2, title: 'Mock Interviews', desc: 'Monaco-based editor with timed rounds, post-session feedback, and a portable score report.', badge: 'new' },
-  { icon: BookOpen, title: 'Knowledge Base', desc: 'Upload your notes, PDFs, docs. Ask questions and get cited answers from your material.', badge: 'new' },
-  { icon: Target, title: 'Streak Engine', desc: 'Track daily consistency with a visual heatmap. Build momentum, stay accountable.', badge: 'new' },
+  { icon: BarChart3, title: 'Dual-Platform Dashboard', desc: 'LeetCode and Codeforces stats side by side - solved counts, contest ratings, 365-day submission heatmaps, and earned badges in one unified view.' },
+  { icon: Trophy, title: 'College Leaderboard', desc: 'Compete with peers using the Lucy Score that combines your LeetCode and Codeforces performance. Filter by platform, college, or department.' },
+  { icon: CalendarCheck, title: 'Routine Tracker', desc: 'Plan and track your daily preparation routine. Build consistency, set goals, and stay accountable.' },
+  { icon: BookOpen, title: 'Knowledge Base', desc: 'Upload your notes, PDFs, and docs. Ask questions and get cited, contextual answers from your own study material.' },
+  { icon: Layers, title: 'DSA Problem Bank', desc: 'A curated bank of DSA problems with difficulty levels, topic tags, and company associations to sharpen your practice.' },
+  { icon: Zap, title: 'Flashcards', desc: 'Generate and review flashcards for rapid concept revision. An interactive study tool to retain what you learn.' },
+  { icon: TrendingUp, title: 'Contest Predictor', desc: 'Forecast your next contest performance based on historical rating trends and problem-solving patterns.' },
+  { icon: Map, title: 'Learning Tracks', desc: 'Follow structured, topic-wise learning paths - for different subjects to upskill yourself for placements.' },
 ];
 
 const STEPS = [
-  { n: '01', title: 'Create your profile', desc: 'Sign up with your college, department, and LeetCode handle.' },
-  { n: '02', title: 'Sync your progress', desc: 'We aggregate your public LeetCode data into one calm dashboard.' },
-  { n: '03', title: 'Compete & improve', desc: 'Track your weekly delta, climb the leaderboard, and earn badges.' },
+  { n: '01', title: 'Create your profile', desc: 'Sign up with your college, department, and your LeetCode or Codeforces handles.' },
+  { n: '02', title: 'Sync your progress', desc: 'One click pulls your LeetCode and Codeforces data into a unified dashboard.' },
+  { n: '03', title: 'Compete & improve', desc: 'Track your weekly delta, climb the leaderboard, earn badges, and follow structured tracks.' },
 ];
 
 const NUMBERS = [
-  { k: '1,500+', l: 'Problems analyzed per student' },
-  { k: '30-day', l: 'Activity heatmap' },
-  { k: '12+', l: 'Achievement badges' },
-  { k: '1 click', l: 'LeetCode sync' },
+  { k: '2 Platforms', l: 'LeetCode + Codeforces sync' },
+  { k: '365-day', l: 'Submission heatmap' },
+  { k: '1,500+', l: 'DSA problems in bank' },
+  { k: '8 Modules', l: 'Dashboard to Learning Tracks' },
 ];
 
 export default function Landing() {
@@ -37,13 +39,13 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 pt-16 md:pt-24 pb-20 md:pb-28 relative">
           <div className="grid lg:grid-cols-12 gap-10 items-end">
             <div className="lg:col-span-7 fade-up">
-              <div className="text-overline mb-5">For engineering students · v1.0 beta</div>
+              <div className="text-overline mb-5">For engineering students</div>
               <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight text-foreground leading-[1.05]">
                 One workspace for every<br className="hidden md:block" />
                 placement preparation goal.
               </h1>
               <p className="mt-6 max-w-xl text-muted-foreground text-lg leading-relaxed">
-                Lucy unifies your LeetCode analytics, college leaderboards, AI mentorship, and interview practice — so you stop juggling tabs and start making real progress.
+                Lucy unifies your LeetCode and Codeforces analytics, college leaderboards, Routine tracker, Rag based learning, DSA problem bank, revision with flashcards, and structured learning tracks - so you stop juggling tabs and start making real progress.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/signup">
@@ -60,7 +62,7 @@ export default function Landing() {
               <div className="mt-8 flex items-center gap-5 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><Check size={14} className="text-emerald-500" /> No credit card</span>
                 <span className="inline-flex items-center gap-1"><Check size={14} className="text-emerald-500" /> Free for students</span>
-                <span className="inline-flex items-center gap-1"><Check size={14} className="text-emerald-500" /> Real LeetCode data</span>
+                <span className="inline-flex items-center gap-1"><Check size={14} className="text-emerald-500" /> Real LC + CF data</span>
               </div>
             </div>
 
@@ -95,7 +97,7 @@ export default function Landing() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-overline mb-2">last 30 days</div>
+                    <div className="text-overline mb-2">last 12 months</div>
                     <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(15, minmax(0,1fr))' }}>
                       {Array.from({ length: 30 }).map((_, i) => {
                         const lvl = [0, 1, 2, 3, 4][Math.floor(Math.random() * 5)];
@@ -134,7 +136,7 @@ export default function Landing() {
             Built for the way you actually prepare.
           </h2>
           <p className="text-muted-foreground mt-4">
-            Stop switching between five tabs. Lucy brings the workflow under one roof — calm, structured, and focused on outcomes.
+            Stop switching between LeetCode, Codeforces, and five other tabs. Lucy brings everything under one roof - calm, structured, and focused on outcomes.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
@@ -194,11 +196,11 @@ export default function Landing() {
       <section className="bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 md:py-24 grid md:grid-cols-2 gap-8 items-center">
           <h2 className="font-heading text-3xl lg:text-5xl tracking-tight">
-            Ready to stop juggling tabs?
+            Ready to unify your prep?
           </h2>
           <div className="md:text-right">
             <p className="text-primary-foreground/70 mb-6">
-              Join the beta and bring your placement prep into one calm workspace.
+              Join now and bring your LeetCode, Codeforces, DSA practice, and study material into one workspace.
             </p>
             <Link to="/signup">
               <Button size="lg" className="bg-background text-foreground hover:bg-background/90 rounded-md px-7 h-12">

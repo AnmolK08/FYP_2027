@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,8 @@ const footerLinks = {
   product: [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Leaderboard', href: '/leaderboard' },
-    { label: 'AI Mentor', href: '/mentor' },
-    { label: 'Mock Interviews', href: '/interview' },
+    { label: 'Routine Tracker', href: '/routine' },
+    { label: 'Learning Tracks', href: '/tracks' },
   ],
   community: [
     { label: 'Coding Clubs', href: '#' },
@@ -31,9 +31,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-10 grid md:grid-cols-4 gap-8 text-sm">
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Sparkles size={16} strokeWidth={1.75} />
-            </span>
+            <img src="/favicon.png" alt="Lucy Logo" className="h-7 w-7 rounded-full object-contain shrink-0 ring-1 ring-border" />
             <span className="font-heading font-bold text-lg tracking-tight">Lucy</span>
           </div>
           <p className="text-muted-foreground max-w-sm">

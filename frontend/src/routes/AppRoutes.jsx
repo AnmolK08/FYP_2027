@@ -30,15 +30,15 @@ export default function AppRoutes() {
       
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
-      <Route path="/mentor" element={<MentorPage />} />
+      {/* <Route path="/mentor" element={<MentorPage />} /> */}
       <Route path="/knowledge" element={<KnowledgePage />} />
-      <Route path="/streaks" element={<StreaksPage />} />
-      <Route path="/interview" element={<InterviewPage />} />
+      {/* <Route path="/streaks" element={<StreaksPage />} />
+      <Route path="/interview" element={<InterviewPage />} /> */}
       <Route path="/flashcards" element={<FlashCardsPage />} />
       <Route path="/problems" element={<ProblemsPage />} />
       <Route path="/predictor" element={<PredictorPage />} />
-      <Route path="/resume" element={<ResumePage />} />
-      <Route path="/sd" element={<SystemDesignPage />} />
+      {/* <Route path="/resume" element={<ResumePage />} />
+      <Route path="/sd" element={<SystemDesignPage />} /> */}
       <Route path="/tracks" element={<TracksPage />} />
       <Route path="/routine" element={<RoutinePage />} />
       <Route path="/u/:username" element={<ProfilePage />} />

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, Trophy, LogOut, Sparkles, Moon, Sun, 
+  LayoutDashboard, Trophy, LogOut, Moon, Sun, 
   Brain, BookOpen, Flame, Code2, FileText, Layers, 
   TrendingUp, Zap, Map, ChevronRight, ChevronLeft, CalendarCheck
 } from 'lucide-react';
@@ -89,9 +89,7 @@ export default function Sidebar() {
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-border shrink-0">
         <Link to="/" className={`flex items-center gap-2 ${!isExpanded ? 'justify-center w-full' : ''}`}>
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shrink-0">
-            <Sparkles size={16} strokeWidth={1.75} />
-          </span>
+          <img src="/favicon.png" alt="Lucy Logo" className="h-7 w-7 rounded-full object-contain shrink-0 ring-1 ring-border" />
           {isExpanded && <span className="font-heading text-lg tracking-tight whitespace-nowrap">Lucy</span>}
         </Link>
         {isExpanded && (
