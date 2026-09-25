@@ -33,7 +33,7 @@ export const predictContestDelta = (currentRating, predictedRank, participants) 
   };
 };
 
-// Flashcards data
+
 const FLASHCARDS = [
   { q: 'Time complexity of inserting into a hash map?', a: 'O(1) amortized average; O(n) worst case due to collisions / rehashing.' },
   { q: 'When to use BFS vs DFS?', a: 'BFS for shortest path in unweighted graphs / level-order. DFS for path existence, topo sort, cycles, backtracking.' },

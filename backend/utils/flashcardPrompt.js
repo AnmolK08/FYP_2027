@@ -17,26 +17,14 @@ Strict Generation Rules:
 9. Target Quantity: Generate the exact requested count of cards if the source text supports it.
 10. Strict JSON Format: Your output MUST be a valid JSON object matching the requested schema. Do NOT include markdown code blocks, backticks, or any conversational preamble.`;
 
-/**
- * Format document chunks into a numbered context block for Gemini.
- * @param {Array<{ chunkIndex: number, text: string }>} chunks
- * @returns {string} Formatted context string
- */
+// Format chunks into a numbered context block so the model can reference
+// source positions when populating sourceChunk in its output
 export const buildFlashcardContextBlock = (chunks) => {
   return chunks
     .map((c) => `[Chunk ${c.chunkIndex}]\n${c.text}`)
     .join('\n\n---\n\n');
 };
 
-/**
- * Build the full prompt for Gemini flashcard generation.
- * @param {Object} params
- * @param {string} params.contextBlock
- * @param {number} params.count
- * @param {string} params.difficulty - 'mixed' | 'easy' | 'medium' | 'hard'
- * @param {string} params.docTitle
- * @returns {string}
- */
 export const buildFlashcardPrompt = ({ contextBlock, count, difficulty, docTitle }) => {
   const difficultyInstruction =
     difficulty === 'mixed' || !difficulty

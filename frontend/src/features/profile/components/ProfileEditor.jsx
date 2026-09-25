@@ -68,12 +68,12 @@ export default function ProfileEditor({ profile, onSaved, open, onOpenChange }) 
     setUsernameError('');
 
     try {
-      // 1. If lucyUsername changed, update via dedicated authenticated API
+      // lucyUsername uses its own endpoint so the server can enforce uniqueness and cache invalidation separately
       if (usernameChanged) {
         await updateLucyUsernameMutation.mutateAsync(form.lucyUsername);
       }
 
-      // 2. Update general profile info (name, college, dept, leetcodeUsername, codeforcesUsername)
+      // Update general profile info
       await updateProfileMutation.mutateAsync({
         name: form.name,
         college: form.college,

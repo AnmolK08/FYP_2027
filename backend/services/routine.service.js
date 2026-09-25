@@ -13,11 +13,10 @@ const getUtcDateOnly = (dateInput) => {
   return new Date(`${yyyy}-${mm}-${dd}T00:00:00.000Z`);
 };
 
-// creating the routine for user 
-// making it active if no other routine is active otherwise setting it to false
+// If no active routine exists yet, auto-activate the new one so the user
+// has something to track immediately. Only one routine can be active at a time.
 export const createRoutine = async (userId, { name, description, tasks = [], isActive }) => {
   return await prisma.$transaction(async (tx) => {
-    // If isActive not explicitly provided, activate if user has no active routines
     let makeActive = isActive;
     if (makeActive === undefined) {
       const activeCount = await tx.routine.count({
@@ -66,7 +65,6 @@ export const createRoutine = async (userId, { name, description, tasks = [], isA
   });
 };
 
-// fetching routines for user
 export const getRoutines = async (userId) => {
   return await prisma.routine.findMany({
     where: {
@@ -86,7 +84,6 @@ export const getRoutines = async (userId) => {
   });
 };
 
-// fetching routing by id for user
 export const getRoutineById = async (userId, routineId) => {
   const routine = await prisma.routine.findFirst({
     where: {
@@ -111,7 +108,6 @@ export const getRoutineById = async (userId, routineId) => {
   return routine;
 };
 
-// updating the routine for user
 export const updateRoutine = async (userId, routineId, { name, description, isActive }) => {
   const existing = await prisma.routine.findFirst({
     where: { id: routineId, userId, isArchived: false },
@@ -149,7 +145,6 @@ export const updateRoutine = async (userId, routineId, { name, description, isAc
   });
 };
 
-// archiving the routine for user
 export const archiveRoutine = async (userId, routineId) => {
   const existing = await prisma.routine.findFirst({
     where: { id: routineId, userId, isArchived: false },
@@ -172,7 +167,6 @@ export const archiveRoutine = async (userId, routineId) => {
   return { success: true, message: 'Routine archived successfully' };
 };
 
-// activating the routine for user
 export const activateRoutine = async (userId, routineId) => {
   const existing = await prisma.routine.findFirst({
     where: { id: routineId, userId, isArchived: false },
@@ -184,6 +178,7 @@ export const activateRoutine = async (userId, routineId) => {
     throw error;
   }
 
+  // Deactivate any currently active routine before activating this one
   return await prisma.$transaction(async (tx) => {
     await tx.routine.updateMany({
       where: { userId, isActive: true },
@@ -203,7 +198,6 @@ export const activateRoutine = async (userId, routineId) => {
   });
 };
 
-// adding task to the routine for user
 export const addTask = async (userId, routineId, taskData) => {
   const routine = await prisma.routine.findFirst({
     where: { id: routineId, userId, isArchived: false },
@@ -231,7 +225,8 @@ export const addTask = async (userId, routineId, taskData) => {
     },
   });
 
-  // If this routine is active, check if today's RoutineDay exists
+  // If the routine is currently active and today's RoutineDay already exists,
+  // add a task log for the new task so it shows up in today's view immediately
   if (routine.isActive) {
     const todayDate = getUtcDateOnly();
     const dayOfWeek = DAY_NAMES[todayDate.getUTCDay()];
@@ -279,7 +274,6 @@ export const addTask = async (userId, routineId, taskData) => {
   return task;
 };
 
-// updating the task for user
 export const updateTask = async (userId, taskId, updates) => {
   const task = await prisma.routineTask.findUnique({
     where: { id: taskId },
@@ -308,7 +302,6 @@ export const updateTask = async (userId, taskId, updates) => {
   });
 };
 
-// removing task from the routine for user
 export const removeTask = async (userId, taskId) => {
   const task = await prisma.routineTask.findUnique({
     where: { id: taskId },
@@ -321,7 +314,7 @@ export const removeTask = async (userId, taskId) => {
     throw error;
   }
 
-  // Soft delete to preserve historical integrity
+  // Soft-delete to preserve historical task logs — hard delete would break analytics
   await prisma.routineTask.update({
     where: { id: taskId },
     data: { isActive: false },
@@ -330,7 +323,9 @@ export const removeTask = async (userId, taskId) => {
   return { success: true, message: 'Task removed successfully' };
 };
 
-// getting today routine for user
+// Returns the active routine and today's task log, creating the RoutineDay
+// if this is the first request of the day. Also backfills any tasks that were
+// added after the RoutineDay was first initialised.
 export const getTodayRoutine = async (userId, customDate = null) => {
   const dateObj = getUtcDateOnly(customDate);
   const dayOfWeek = DAY_NAMES[dateObj.getUTCDay()];
@@ -357,7 +352,6 @@ export const getTodayRoutine = async (userId, customDate = null) => {
     };
   }
 
-  // Check if RoutineDay already exists
   let routineDay = await prisma.routineDay.findUnique({
     where: {
       userId_routineId_date: {
@@ -382,7 +376,7 @@ export const getTodayRoutine = async (userId, customDate = null) => {
   });
 
   if (routineDay) {
-    // Check if any active tasks for today are missing from taskLogs
+    // Backfill task logs for any tasks added after today's RoutineDay was first created
     const applicableTasks = activeRoutine.tasks.filter((t) =>
       t.daysOfWeek.includes(dayOfWeek)
     );
@@ -425,7 +419,6 @@ export const getTodayRoutine = async (userId, customDate = null) => {
         });
       });
 
-      // Refetch
       routineDay = await prisma.routineDay.findUnique({
         where: { id: routineDay.id },
         include: {
@@ -450,7 +443,7 @@ export const getTodayRoutine = async (userId, customDate = null) => {
     };
   }
 
-  // RoutineDay does not exist yet for today — initialize it!
+  // First access of today — create the RoutineDay and task logs in one transaction
   const applicableTasks = activeRoutine.tasks.filter((t) =>
     t.daysOfWeek.includes(dayOfWeek)
   );
@@ -505,7 +498,6 @@ export const getTodayRoutine = async (userId, customDate = null) => {
   };
 };
 
-// getting routine day for user
 export const getRoutineDay = async (userId, dateStr) => {
   const dateObj = getUtcDateOnly(dateStr);
 
@@ -543,7 +535,7 @@ export const getRoutineDay = async (userId, dateStr) => {
   return { routineDay };
 };
 
-// updating the task log for user
+// Updates a task log status and recalculates completionPercentage for the day in one transaction
 export const updateTaskLog = async (userId, dayId, taskLogId, { status }) => {
   const taskLog = await prisma.routineTaskLog.findFirst({
     where: {

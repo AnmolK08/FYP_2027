@@ -2,16 +2,8 @@ import { Queue } from 'bullmq';
 import { redisClient, isRedisReady, getRedisUrl } from '../config/redis.js';
 import { syncLockKey, SYNC_LOCK_TTL } from '../utils/redisKeys.js';
 
-// LeetCode Sync Queue (BullMQ)
-// Manages async LeetCode synchronization jobs.
-// Uses a Redis-based dedup lock to prevent duplicate concurrent syncs
-// for the same user.
- 
-
 let syncQueue = null;
 
-// Initialise the BullMQ queue.
-// Call after Redis is connected.
 export const initSyncQueue = () => {
   const redisUrl = getRedisUrl();
   if (!redisUrl || (process.env.VERCEL && redisUrl.includes('localhost'))) {
@@ -20,7 +12,7 @@ export const initSyncQueue = () => {
   }
 
   try {
-    // BullMQ requires IORedis-style connection options
+    // BullMQ needs IORedis-style connection options, not the redis:// URL string
     const url = new URL(redisUrl);
     const connection = {
       host: url.hostname,
@@ -43,19 +35,15 @@ export const initSyncQueue = () => {
   }
 };
 
-
-//  Returns true if the queue is available for accepting jobs.
-
 export const isQueueReady = () => syncQueue !== null;
 
-// Add a LeetCode sync job for a user.
-// Uses a Redis lock to prevent duplicate concurrent jobs.
+// Acquires a per-user Redis lock before enqueuing to prevent duplicate concurrent
+// sync jobs for the same user. The lock is released by the worker after completion.
 export const addSyncJob = async (userId) => {
   if (!syncQueue) {
     return { queued: false, reason: 'Queue unavailable' };
   }
 
-  // Dedup: acquire a per-user sync lock
   if (isRedisReady()) {
     try {
       const lockAcquired = await redisClient.set(
@@ -69,7 +57,6 @@ export const addSyncJob = async (userId) => {
       }
     } catch (err) {
       console.error('[SyncQueue] Lock acquisition failed:', err.message);
-      // Continue without lock — job may run slightly duplicated
     }
   }
 
@@ -89,7 +76,6 @@ export const addSyncJob = async (userId) => {
     return { queued: true };
   } catch (err) {
     console.error('[SyncQueue] Failed to add job:', err.message);
-    // Release lock on failure
     if (isRedisReady()) {
       try {
         await redisClient.del(syncLockKey(userId));

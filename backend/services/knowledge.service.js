@@ -5,10 +5,9 @@ import { isGeminiReady } from '../config/gemini.js';
 import * as vectorService from './vector.service.js';
 import * as ragService from './rag.service.js';
 
-const CHUNK_SIZE = parseInt(process.env.RAG_CHUNK_SIZE, 10) || 1000;
+const CHUNK_SIZE    = parseInt(process.env.RAG_CHUNK_SIZE, 10)    || 1000;
 const CHUNK_OVERLAP = parseInt(process.env.RAG_CHUNK_OVERLAP, 10) || 150;
 
-// Get all knowledge documents for a user.
 export const getKnowledgeDocs = async (userId) => {
   return await prisma.knowledgeDoc.findMany({
     where: { userId },
@@ -24,26 +23,22 @@ export const getKnowledgeDocs = async (userId) => {
   });
 };
 
-// Upload and index a knowledge document. 
-// Pipeline:
-//    1. Validate input
-//    2. Split content into semantic chunks
-//    3. Create KnowledgeDoc record in PostgreSQL
-//    4. Embed chunks and upsert vectors into Pinecone
-//    5. Return document with indexing status
-// If Pinecone ingestion fails, the document is still saved in PostgreSQL
-// but marked with indexingStatus: 'failed'. This allows future re-indexing.
+// Upload pipeline:
+//   1. Split content into chunks
+//   2. Save KnowledgeDoc to PostgreSQL (so the record survives even if Pinecone fails)
+//   3. Embed + upsert chunks into Pinecone
+//
+// If Pinecone ingestion fails the document is still accessible in PostgreSQL
+// and can be re-indexed later. indexingStatus reflects this.
 export const uploadKnowledgeDoc = async (userId, docData) => {
   const { title, content, filename, size } = docData;
 
-  // Validate 
   if (!title || !content) {
     const error = new Error('Title and content are required.');
     error.statusCode = 400;
     throw error;
   }
 
-  // Split into semantic chunks 
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: CHUNK_SIZE,
     chunkOverlap: CHUNK_OVERLAP,
@@ -57,7 +52,6 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
     throw error;
   }
 
-  // Create PostgreSQL record 
   const doc = await prisma.knowledgeDoc.create({
     data: {
       userId,
@@ -69,8 +63,7 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
     },
   });
 
-  // Embed and upsert into Pinecone
-  let indexingStatus = 'skipped'; // Default if Pinecone/Gemini not configured
+  let indexingStatus = 'skipped';
 
   if (isPineconeReady() && isGeminiReady()) {
     try {
@@ -85,8 +78,7 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
     } catch (err) {
       console.error(`[Knowledge] Pinecone ingestion failed for doc ${doc.id}:`, err.message);
       indexingStatus = 'failed';
-      // Document is saved in PostgreSQL — can be re-indexed later.
-      // We don't throw here to avoid losing the DB record.
+      // Don't throw — the DB record is already saved and can be re-indexed later
     }
   }
 
@@ -101,13 +93,11 @@ export const uploadKnowledgeDoc = async (userId, docData) => {
   };
 };
 
-// Delete a knowledge document and its associated vectors.
-// Pipeline:
-//   1. Fetch document (verify existence and ownership)
-//   2. Delete vectors from Pinecone
-//   3. Delete PostgreSQL record
+// Delete pipeline:
+//   1. Verify ownership
+//   2. Delete Pinecone vectors (best-effort — orphaned vectors are less harmful than blocking deletion)
+//   3. Delete the PostgreSQL record
 export const deleteKnowledgeDoc = async (userId, docId) => {
-  // Verify ownership and get document data 
   const doc = await prisma.knowledgeDoc.findFirst({
     where: { id: docId, userId },
   });
@@ -118,18 +108,15 @@ export const deleteKnowledgeDoc = async (userId, docId) => {
     throw error;
   }
 
-  // Delete vectors from Pinecone
   if (isPineconeReady() && doc.nChunks > 0) {
     try {
       await vectorService.deleteDocumentVectors(docId, doc.nChunks);
     } catch (err) {
       console.error(`[Knowledge] Failed to delete Pinecone vectors for doc ${docId}:`, err.message);
-      // Continue with DB deletion — orphaned vectors are less harmful
-      // than preventing document deletion entirely.
+      // Continue with DB deletion regardless
     }
   }
 
-  // Delete PostgreSQL record
   await prisma.knowledgeDoc.delete({
     where: { id: docId },
   });
@@ -137,7 +124,6 @@ export const deleteKnowledgeDoc = async (userId, docId) => {
   return { success: true, message: "Document deleted successfully." };
 };
 
-// Ask a question against the user's knowledge base.
 export const askQuestion = async (userId, question, docIds) => {
   return await ragService.answerQuestion({ userId, question, docIds });
 };

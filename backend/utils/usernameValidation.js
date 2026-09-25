@@ -1,10 +1,4 @@
-/**
- * Username validation rules:
- * - 3 to 20 characters
- * - Only lowercase English letters (a-z), digits (0-9), and underscores (_)
- * - Must not be a reserved system route or keyword
- */
-
+// Rules: 3–20 chars, lowercase letters/digits/underscores only, no reserved words.
 export const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 
 export const RESERVED_USERNAMES = new Set([
@@ -56,10 +50,6 @@ export const RESERVED_USERNAMES = new Set([
   'system-design',
 ]);
 
-/**
- * Validates a Lucy username.
- * Returns { valid: boolean, error?: string }
- */
 export function validateLucyUsername(username) {
   if (!username || typeof username !== 'string') {
     return { valid: false, error: 'Username is required' };
@@ -89,37 +79,31 @@ export function validateLucyUsername(username) {
   return { valid: true, error: null };
 }
 
-/**
- * Normalizes an arbitrary string (like a LeetCode handle or full name)
- * into a valid Lucy username candidate.
- */
+// Turns an arbitrary string (LeetCode handle, full name, etc.) into a valid
+// Lucy username candidate. Falls back to a random suffix when nothing usable remains.
 export function normalizeCandidateUsername(str) {
   if (!str || typeof str !== 'string') {
     return 'user_' + Math.random().toString(36).substring(2, 8);
   }
 
-  // Lowercase and replace invalid characters with underscore
   let normalized = str
     .toLowerCase()
     .replace(/[^a-z0-9_]/g, '_')
-    .replace(/_+/g, '_') // collapse multiple underscores
-    .replace(/^_+|_+$/g, ''); // strip leading/trailing underscores
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
 
   if (normalized.length === 0) {
     normalized = 'user_' + Math.random().toString(36).substring(2, 8);
   }
 
-  // Ensure min length of 3
   if (normalized.length < 3) {
     normalized = (normalized + '_user').slice(0, 20);
   }
 
-  // Ensure max length of 20
   if (normalized.length > 20) {
     normalized = normalized.slice(0, 20);
   }
 
-  // If matches reserved keyword, append suffix
   if (RESERVED_USERNAMES.has(normalized)) {
     normalized = (normalized.slice(0, 16) + '_dev').slice(0, 20);
   }

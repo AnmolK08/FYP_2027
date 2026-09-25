@@ -30,7 +30,7 @@ export default function LeaderboardPage() {
   const { data: myRank }             = useMyLeaderboardRank(type);
   const { data: nearby }             = useNearbyUsers(type, 2);
 
-  // Reset to page 1 on type change
+  // Reset to page 1 when the board type changes
   const handleTypeChange = (t) => {
     setType(t);
     setPage(1);
@@ -144,7 +144,6 @@ export default function LeaderboardPage() {
   );
 }
 
-// ─── LeaderboardTable ─────────────────────────────────────────────────────────
 
 function LeaderboardTable({ rows, loading, type, compact = false }) {
   if (loading) {
@@ -303,7 +302,6 @@ function LeaderboardTable({ rows, loading, type, compact = false }) {
   );
 }
 
-// ─── PodiumCard ───────────────────────────────────────────────────────────────
 
 function PodiumCard({ row, place, type, featured }) {
   if (!row) return <div />;

@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import ProfileEditor from '../../features/profile/components/ProfileEditor';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 const BADGE_ICONS = {
   Trophy, Award, Flame, Crown, Medal, Target, Mountain, Shield, Star, Zap, Swords,
@@ -29,7 +28,7 @@ const TIER_STYLES = {
   platinum: 'bg-primary/10 text-primary border-primary/30',
 };
 
-// CF rank → colour helper (mirrors backend cfDifficultyWeight)
+// CF rank colour matches the official Codeforces colour scheme
 const CF_RANK_COLORS = {
   'newbie':                 'text-slate-400',
   'pupil':                  'text-green-500',
@@ -43,8 +42,6 @@ const CF_RANK_COLORS = {
   'legendary grandmaster':  'text-red-700',
 };
 const cfRankColor = (rank) => CF_RANK_COLORS[rank?.toLowerCase?.()] || 'text-muted-foreground';
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { user, profile, refreshProfile } = useAuth();
@@ -186,7 +183,6 @@ export default function DashboardPage() {
   );
 }
 
-// ─── PlatformTab ──────────────────────────────────────────────────────────────
 
 function PlatformTab({ active, onClick, icon, label, connected }) {
   return (
@@ -211,7 +207,6 @@ function PlatformTab({ active, onClick, icon, label, connected }) {
   );
 }
 
-// ─── LeetCodeView ─────────────────────────────────────────────────────────────
 
 function LeetCodeView({ data, profile }) {
   const connected = data?.connected;
@@ -340,7 +335,6 @@ function LeetCodeView({ data, profile }) {
   );
 }
 
-// ─── CodeforcesView ───────────────────────────────────────────────────────────
 
 function CodeforcesView({ data, profile }) {
   const connected = data?.connected;
@@ -415,7 +409,6 @@ function CodeforcesView({ data, profile }) {
   );
 }
 
-// ─── Shared UI components ─────────────────────────────────────────────────────
 
 function ConnectPrompt({ platform, message, testid }) {
   return (
@@ -528,7 +521,7 @@ function RatingChart({ history, gradientId = 'ratingGrad' }) {
 }
 
 function CFRatingChart({ history }) {
-  // CF ratingHistory: [{contestId, contestName, oldRating, newRating, timestamp}]
+  // CF ratingHistory timestamps come as ISO strings; convert to seconds for RatingChart
   const data = history.map((e) => ({
     rating:      e.newRating,
     contest:     e.contestName,
@@ -697,7 +690,6 @@ function ProfileFooter({ profile, stats, platform }) {
   );
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function computeLeetcodeBadges(s) {
   const b = [];

@@ -10,7 +10,7 @@ export function useTodayRoutine(date = null) {
       const data = await api.getTodayRoutine(date);
       return data;
     },
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
   });
 }
 
@@ -29,14 +29,13 @@ export function useUpdateTaskLog() {
   return useMutation({
     mutationFn: ({ dayId, taskLogId, status }) =>
       api.updateTaskLog(dayId, taskLogId, { status }),
+
     onMutate: async ({ dayId, taskLogId, status }) => {
-      // Cancel outgoing refetches
+      // Optimistic update so the checkbox feels instant
       await queryClient.cancelQueries({ queryKey: ['todayRoutine'] });
 
-      // Snapshot previous value
       const previousData = queryClient.getQueryData(['todayRoutine', 'today']);
 
-      // Optimistically update
       if (previousData?.routineDay?.taskLogs) {
         const updatedLogs = previousData.routineDay.taskLogs.map((log) => {
           if (log.id === taskLogId) {
@@ -71,6 +70,7 @@ export function useUpdateTaskLog() {
       toast.success(`Task ${statusLabels[variables.status] || 'updated'}`);
     },
     onError: (err, _variables, context) => {
+      // Roll back the optimistic update on failure
       if (context?.previousData) {
         queryClient.setQueryData(['todayRoutine', 'today'], context.previousData);
       }

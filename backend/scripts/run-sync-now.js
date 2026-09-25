@@ -1,48 +1,27 @@
 #!/usr/bin/env node
-/**
- * run-sync-now.js
- *
- * One-shot script that executes the full daily platform sync pipeline
- * immediately — no cron schedule, no distributed lock.
- * Useful for local testing, manual catch-up runs, or CI pipelines.
- *
- * Usage
- * ─────
- *   node --env-file=.env scripts/run-sync-now.js [options]
- *
- * Options (all optional)
- * ─────────────────────────────────────────────────────────────────────────────
- *   --skip-lc          Skip the LeetCode sync phase
- *   --skip-cf          Skip the Codeforces sync phase
- *   --skip-lb          Skip the leaderboard rebuild phase
- *
- * Environment variables used (same as the cron job)
- * ─────────────────────────────────────────────────────────────────────────────
- *   CRON_BATCH_SIZE          DB page size            (default: 100)
- *   CRON_LC_CONCURRENCY      Parallel LC requests    (default: 5)
- *   CRON_CF_DELAY_MS         Inter-user CF delay ms  (default: 2100)
- *   CRON_RETRY_COUNT         Retry limit per user    (default: 3)
- *   CRON_RETRY_BASE_DELAY_MS Backoff base ms         (default: 5000)
- *
- * Exit codes
- * ─────────────────────────────────────────────────────────────────────────────
- *   0  All phases completed (individual user failures do NOT set exit 1)
- *   1  A sync phase crashed entirely or Redis/DB connection failed
- */
+// One-shot script that runs the full daily platform sync immediately.
+// Useful for local testing, manual catch-up runs, or CI pipelines.
+//
+// Usage:
+//   node --env-file=.env scripts/run-sync-now.js [--skip-lc] [--skip-cf] [--skip-lb]
+//
+// Exit codes:
+//   0  All phases completed (per-user failures do NOT set exit 1)
+//   1  A phase crashed entirely, or Redis/DB connection failed
 
 import 'dotenv/config';
 import { connectRedis }        from '../config/redis.js';
 import prisma                  from '../config/prisma.js';
 import { runFullPlatformSync } from '../services/sync/platformSync.service.js';
 
-// ─── Parse CLI flags ─────────────────────────────────────────────────────────
+// Parse CLI flags
 
 const args   = process.argv.slice(2);
 const skipLC = args.includes('--skip-lc');
 const skipCF = args.includes('--skip-cf');
 const skipLB = args.includes('--skip-lb');
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// Main
 
 const main = async () => {
   console.log('╔══════════════════════════════════════════════╗');
@@ -62,7 +41,7 @@ const main = async () => {
     console.warn('[RunSyncNow] Redis connection failed — continuing without Redis cache:', err.message);
   }
 
-  // ── Run the pipeline ───────────────────────────────────────────────────────
+  // Run the pipeline
   let report;
   try {
     report = await runFullPlatformSync({ skipLC, skipCF, skipLB });
@@ -72,10 +51,10 @@ const main = async () => {
     process.exit(1);
   }
 
-  // ── Disconnect Prisma cleanly ──────────────────────────────────────────────
+  // Disconnect Prisma cleanly
   await prisma.$disconnect();
 
-  // ── Determine exit code ────────────────────────────────────────────────────
+  // Determine exit code
   // Phase-level crashes (not per-user failures) are flagged with report.*.crashed
   const anyCrash =
     report.leetcode?.crashed  ||

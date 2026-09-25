@@ -49,7 +49,7 @@ export default function LucySplash({ loading, onDone }) {
   const [allShown, setAllShown] = useState(false);
   const [phase, setPhase] = useState('enter');
 
-  // Step 1: Open image slot after letters appear
+  // Start cycling images after the letters animate in
   useEffect(() => {
     const t = setTimeout(() => {
       setActiveIndex(0);
@@ -58,7 +58,6 @@ export default function LucySplash({ loading, onDone }) {
     return () => clearTimeout(t);
   }, []);
 
-  // Step 2: Cycle through images
   useEffect(() => {
     if (activeIndex < 0 || activeIndex >= images.length) return;
 
@@ -73,7 +72,7 @@ export default function LucySplash({ loading, onDone }) {
     return () => clearTimeout(t);
   }, [activeIndex, images.length]);
 
-  // Step 3: Once all images shown AND loading done → collapse
+  // Collapse only after all images have played AND the auth check is done
   useEffect(() => {
     if (allShown && !loading) {
       const t = setTimeout(() => setPhase('collapse'), 200);
@@ -81,7 +80,6 @@ export default function LucySplash({ loading, onDone }) {
     }
   }, [allShown, loading]);
 
-  // Step 4: After collapse animation → notify parent
   useEffect(() => {
     if (phase === 'collapse') {
       const t = setTimeout(() => {
@@ -122,7 +120,7 @@ export default function LucySplash({ loading, onDone }) {
         <span className="lucy-char" style={{ animationDelay: '180ms' }}>Y</span>
       </div>
 
-      {/* Loading dots */}
+        {/* Loading dots */}
       {!isCollapse && (
         <div className="lucy-dots">
           <span /><span /><span />
@@ -148,7 +146,7 @@ export default function LucySplash({ loading, onDone }) {
           pointer-events: none;
         }
 
-        /* ── Letter row ── */
+        
         .lucy-row {
           display: flex;
           align-items: center;
@@ -171,7 +169,7 @@ export default function LucySplash({ loading, onDone }) {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── Image slot ── */
+        
         .lucy-slot {
           position: relative;
           width: 0;
@@ -194,7 +192,7 @@ export default function LucySplash({ loading, onDone }) {
                       margin 0.4s cubic-bezier(0.55, 0, 1, 0.45);
         }
 
-        /* ── Individual slides ── */
+        
         .lucy-slide {
           position: absolute;
           inset: 0;
@@ -211,7 +209,7 @@ export default function LucySplash({ loading, onDone }) {
           transform: scale(1);
         }
 
-        /* ── Loading dots ── */
+        
         .lucy-dots {
           display: flex;
           gap: 6px;

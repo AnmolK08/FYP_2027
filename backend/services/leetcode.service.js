@@ -7,7 +7,6 @@ import { calcLeetcodeScore, calcLucyScore } from '../utils/scoring.js';
 export const syncLeetcodeStats = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    // Also grab current CF score so we can recompute lucyScore
     select: { leetcodeUsername: true, codeforcesStats: { select: { codeforcesScore: true } } },
   });
 
@@ -17,9 +16,7 @@ export const syncLeetcodeStats = async (userId) => {
     throw error;
   }
 
-  // fetching the data from graphql api
   const parsedData = await fetchAndParseLeetcodeData(user.leetcodeUsername);
-  // storing in the db
   const stats = await persistLeetcodeData(userId, parsedData);
 
   // Compute lucyScore = leetcodeScore + current codeforcesScore
@@ -190,7 +187,6 @@ export const fetchAndParseLeetcodeData = async (leetcodeUsername) => {
   };
 };
 
-// storing the leetcode data to db helper function
 export const persistLeetcodeData = async (userId, data) => {
   const stats = await prisma.leetcodeStats.upsert({
     where: { userId },
@@ -260,7 +256,6 @@ export const persistLeetcodeData = async (userId, data) => {
   return stats;
 };
 
-//helper function for updating the redis cache after the leetcode data is synced
 export const postSyncRedisUpdates = async (userId, universalScore, leetcodeScore = 0, codeforcesScore = 0, lucyScore = 0) => {
   try {
     await invalidateDashboardCache(userId);
@@ -268,14 +263,13 @@ export const postSyncRedisUpdates = async (userId, universalScore, leetcodeScore
     console.error('[LeetCode] Dashboard cache invalidation failed:', err.message);
   }
 
-  // Legacy: keep leaderboard:global in sync so old code paths still work
+  // Keep leaderboard:global in sync for backward compat with the BullMQ worker path
   try {
     await updateUserScore(userId, universalScore);
   } catch (err) {
     console.error('[LeetCode] Legacy leaderboard update failed:', err.message);
   }
 
-  // V1: push all three platform ZSETs
   try {
     await updatePlatformScores(userId, { leetcodeScore, codeforcesScore, lucyScore });
   } catch (err) {
@@ -283,7 +277,6 @@ export const postSyncRedisUpdates = async (userId, universalScore, leetcodeScore
   }
 };
 
-// fetching the leetcode data from the db
 export const getStats = async (userId) => {
   return await prisma.leetcodeStats.findUnique({
     where: { userId },

@@ -1,6 +1,5 @@
 import { Router } from 'express';
 
-// Import all modular routers
 import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
 import activityRoutes from './activity.routes.js';

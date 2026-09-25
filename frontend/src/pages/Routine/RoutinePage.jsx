@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
 
-// Hooks
 import {
   useRoutines,
   useCreateRoutine,
@@ -40,7 +39,6 @@ import {
   useRoutineSuggestions,
 } from '../../features/routine/hooks/useRoutineAnalytics';
 
-// Components
 import { RoutineTaskItem } from '../../features/routine/components/RoutineTaskItem';
 import { RoutineProgressRing } from '../../features/routine/components/RoutineProgressRing';
 import { CreateRoutineDialog } from '../../features/routine/components/CreateRoutineDialog';

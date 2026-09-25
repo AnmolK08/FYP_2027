@@ -16,7 +16,7 @@ export const authenticate = (req, res, next) => {
 
     const decoded = verifyAccessToken(token);
 
-    // Minimal user identity in request context
+    // Attach only what downstream handlers need — never expose the full JWT payload
     req.user = {
       id: decoded.id,
       email: decoded.email,

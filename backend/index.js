@@ -14,7 +14,7 @@ dotenv.config();
 
 const app = express();
 
-// Trust reverse proxy for secure cookies on Vercel/proxies
+// Required for correct IP detection behind Vercel's reverse proxy
 app.set('trust proxy', 1);
 
 const rawFrontendUrls = (process.env.FRONTEND_URL || '')
@@ -34,7 +34,7 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
 
       const cleanOrigin = origin.replace(/\/+$/, '');
@@ -49,12 +49,13 @@ app.use(
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
-    credentials: true, // Allow cookies and auth headers
+    credentials: true,
   })
 );
-app.use(morgan('dev')); // HTTP request logger
+app.use(morgan('dev'));
 
-// Zero-dependency native cookie parser middleware (avoids docker container dependency caching issues)
+// Inline cookie parser — avoids the cookie-parser package which can cause
+// Docker layer caching issues during CI builds
 app.use((req, res, next) => {
   req.cookies = req.cookies || {};
   if (req.headers.cookie) {
@@ -71,7 +72,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoints
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Lucy API is running' });
 });
@@ -92,14 +92,13 @@ app.use(errorMiddleware);
 const PORT = process.env.PORT || 8000;
 
 const start = async () => {
-  // Connect Redis (non-fatal if unavailable, run in background)
+  // Redis failure is non-fatal — the app degrades gracefully throughout
   connectRedis().catch((err) => console.error('Redis init failed:', err));
 
-  // Initialise BullMQ queue & worker (requires Redis)
   initSyncQueue();
   startSyncWorker();
 
-  // Register the daily platform sync cron (04:00 AM IST)
+  // Daily platform sync at 04:00 AM IST — no-op on Vercel
   startDailySyncCron();
 
   app.listen(PORT, () => {
@@ -113,7 +112,8 @@ if (!process.env.VERCEL) {
     process.exit(1);
   });
 } else {
-  // In Vercel serverless environment, connect to Redis and init queue if configured
+  // On Vercel: connect Redis and init the queue but don't start the BullMQ worker
+  // (serverless functions can't run persistent workers)
   connectRedis().catch((err) => console.error('Redis init failed:', err));
   initSyncQueue();
 }

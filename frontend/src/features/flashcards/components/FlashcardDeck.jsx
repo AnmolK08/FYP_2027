@@ -33,7 +33,7 @@ export default function FlashcardDeck({
   const reviewMutation = useReviewFlashcard();
   const deleteMutation = useDeleteFlashcard();
 
-  // Sync internal deck when input cards change
+  // Reset deck state when the parent passes in a new card set
   useEffect(() => {
     setDeck(cards);
     setIndex(0);
@@ -67,16 +67,14 @@ export default function FlashcardDeck({
     (rating) => {
       if (!currentCard) return;
 
-      // Track session stats
       setSessionStats((prev) => ({
         ...prev,
         [rating]: prev[rating] + 1,
       }));
 
-      // Trigger mutation for future spaced-repetition persistence
+      // Fire and forget — review persistence is best-effort for now
       reviewMutation.mutate({ id: currentCard.id, rating });
 
-      // Automatically advance to the next card
       handleNext();
     },
     [currentCard, reviewMutation, handleNext]
@@ -107,10 +105,9 @@ export default function FlashcardDeck({
     setIsFlipped(false);
   };
 
-  // Keyboard shortcut navigation
+  // Keyboard shortcuts: Space/Enter flips, arrows navigate, 1-4 rate (only when flipped)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Avoid intercepting input fields or modals
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
       if (e.code === 'Space' || e.key === 'Enter') {
@@ -151,7 +148,6 @@ export default function FlashcardDeck({
     );
   }
 
-  // Deck Completed Screen
   if (isCompleted) {
     const totalReviewed =
       sessionStats.again + sessionStats.hard + sessionStats.good + sessionStats.easy;
@@ -176,7 +172,6 @@ export default function FlashcardDeck({
           Great active recall session. Here is your study breakdown:
         </p>
 
-        {/* Score Card */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 my-6">
           <div className="p-3 bg-muted/40 rounded-xl border border-border">
             <div className="text-overline">Mastery</div>
@@ -204,7 +199,6 @@ export default function FlashcardDeck({
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
           <Button variant="outline" onClick={handleRestart} className="gap-2">
             <RotateCcw size={15} /> Restart Deck
@@ -224,14 +218,12 @@ export default function FlashcardDeck({
 
   return (
     <div className="space-y-6">
-      {/* Session Progress Header */}
       <FlashcardProgress
         currentIndex={index}
         totalCards={deck.length}
         sessionStats={sessionStats}
       />
 
-      {/* Active Card */}
       <Flashcard
         card={currentCard}
         isFlipped={isFlipped}
@@ -242,7 +234,6 @@ export default function FlashcardDeck({
         totalCards={deck.length}
       />
 
-      {/* Deck Controls */}
       <div className="max-w-2xl mx-auto flex items-center justify-between gap-4 pt-2">
         <div className="flex items-center gap-2">
           <Button

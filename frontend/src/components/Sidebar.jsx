@@ -113,7 +113,7 @@ export default function Sidebar() {
       <div className={`flex-1 overflow-y-auto overflow-x-hidden pb-4 custom-scrollbar ${isExpanded ? 'px-3' : 'px-2 flex flex-col items-center'}`}>
         {renderNavGroup('Main', mainNavItems)}
         {renderNavGroup('Practice', practiceItems)}
-        {/* {renderNavGroup('Career', careerItems)} */}
+      {/* {renderNavGroup('Career', careerItems)} */}
         {renderNavGroup('Learning', learningItems)}
       </div>
 

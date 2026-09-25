@@ -75,7 +75,6 @@ export function CreateRoutineDialog({ isOpen, onClose, onCreateRoutine, isSubmit
   const [tasks, setTasks] = useState(DEFAULT_TASKS);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setName('');
@@ -122,7 +121,7 @@ export function CreateRoutineDialog({ isOpen, onClose, onCreateRoutine, isSubmit
     const currentDays = task.daysOfWeek || ALL_DAY_IDS;
     let newDays;
     if (currentDays.includes(dayId)) {
-      if (currentDays.length === 1) return; // Keep at least one day
+      if (currentDays.length === 1) return;
       newDays = currentDays.filter((d) => d !== dayId);
     } else {
       newDays = [...currentDays, dayId];
@@ -161,7 +160,6 @@ export function CreateRoutineDialog({ isOpen, onClose, onCreateRoutine, isSubmit
       return;
     }
 
-    // Format & validate tasks
     const validTasks = tasks
       .filter((t) => t.title && t.title.trim())
       .map((t, idx) => ({

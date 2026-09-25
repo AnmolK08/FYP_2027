@@ -9,7 +9,8 @@ export default function App() {
   const [themeReady, setThemeReady] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
 
-  // Apply theme immediately so splash and background have correct colors
+  // Apply the stored theme before the first paint so the splash screen
+  // and background don't flash with the wrong colours
   useEffect(() => {
     const root = document.documentElement;
     const stored = localStorage.getItem('theme');

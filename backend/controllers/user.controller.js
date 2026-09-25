@@ -1,13 +1,5 @@
  import * as userService from '../services/user.service.js';
 
-/**
- * Controller responsibilities:
- * - Extract data from req
- * - Call appropriate service function
- * - Return service result through res
- * - NO business logic, NO DB calls
- */
-
 export const getAllUsers = async (req, res, next) => {
   try {
     const users = await userService.findAllUsers();
@@ -53,8 +45,7 @@ export const updateMe = async (req, res, next) => {
     const userId = req.user.id;
     const updateData = req.body;
     
-    // The frontend expects { user: updatedUser } in the root of the response,
-    // not { success: true, data: user }
+    // Frontend expects { user } at the root, not { success: true, data: user }
     const updatedUser = await userService.updateUser(userId, updateData);
     res.status(200).json({ user: updatedUser });
   } catch (error) {

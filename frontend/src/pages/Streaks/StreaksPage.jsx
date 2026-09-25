@@ -54,7 +54,7 @@ const calendar = useMemo(() => {
     try {
       await checkIn.mutateAsync();
     } catch (e) {
-      // Error toast is handled in useCheckIn hook
+      // toast handled in useCheckIn
     }
   };
 

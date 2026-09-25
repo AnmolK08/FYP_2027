@@ -10,8 +10,9 @@ import {
   PLATFORM_DASHBOARD_TTL,
 } from '../utils/redisKeys.js';
 
-// get the dashboard data for a user from redis
-// with cache aside pattern with lock for stampede protection and fallback to postgres if redis is not available
+// Cache-aside with a per-user stampede lock.
+// Multiple concurrent requests for the same cold cache will only trigger one
+// DB read; the others wait briefly and then serve the populated cache.
 export const getDashboard = async (userId) => {
   // 1. Try Redis cache
   if (isRedisReady()) {
@@ -69,8 +70,7 @@ export const buildDashboardDTO = async (userId) => {
           lastSynced: true,
         },
       },
-      // ── Codeforces stats (independent of LeetCode) ──────────────────────────
-      // Null when the user has never synced Codeforces — callers must handle null.
+      // null when the user has never synced Codeforces — callers must handle null
       codeforcesStats: {
         select: {
           handle: true,
@@ -106,12 +106,10 @@ export const buildDashboardDTO = async (userId) => {
     throw error;
   }
 
-  // ── LeetCode section (unchanged) ────────────────────────────────────────────
   const lcStats = user.leetcodeStats || {};
 
-  // ── Codeforces section ───────────────────────────────────────────────────────
-  // Returns null when never synced so frontend can render "not connected" state
-  // without crashing the entire dashboard.
+  // Returns null when never synced so the frontend can render a "not connected"
+  // state without crashing the whole dashboard
   const cfStats = user.codeforcesStats
     ? {
         handle:            user.codeforcesStats.handle,
@@ -225,8 +223,8 @@ const rebuildWithLock = async (userId) => {
     }
   }
 
-  // Lock not acquired — another request is rebuilding.
-  // Wait briefly and retry the cache a few times.
+  // Another request owns the lock and is already rebuilding.
+  // Poll the cache a few times before falling back to a direct DB read.
   for (let attempt = 0; attempt < 3; attempt++) {
     await sleep(100);
 
@@ -236,24 +234,15 @@ const rebuildWithLock = async (userId) => {
     }
   }
 
-  // Still no cache after retries — fall back to PostgreSQL directly
-  // (does NOT set cache to avoid thundering herd on the write side)
+  // Still nothing — hit the DB directly without caching to avoid a write-side thundering herd
   return await buildDashboardDTO(userId);
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ─── Platform-specific dashboards ────────────────────────────────────────────
-// Each function returns only the stats relevant to that platform.
-// Returns a structured null section when the user hasn't connected/synced.
+// Platform-specific dashboards are cached under separate keys so a LeetCode
+// sync only busts the LC cache, not the Codeforces one, and vice versa.
 
-/**
- * LeetCode-only dashboard DTO.
- * Cached independently under platform:leetcode:dashboard:{userId}.
- *
- * @param {string} userId
- * @returns {Promise<object>}
- */
 export const getLeetcodeDashboard = async (userId) => {
   if (isRedisReady()) {
     try {
@@ -277,13 +266,6 @@ export const getLeetcodeDashboard = async (userId) => {
   return dto;
 };
 
-/**
- * Codeforces-only dashboard DTO.
- * Cached independently under platform:codeforces:dashboard:{userId}.
- *
- * @param {string} userId
- * @returns {Promise<object>}
- */
 export const getCodeforcesDashboard = async (userId) => {
   if (isRedisReady()) {
     try {
@@ -307,7 +289,7 @@ export const getCodeforcesDashboard = async (userId) => {
   return dto;
 };
 
-/** Build LeetCode-only DTO from DB — no CF data included. */
+// building the leetcode dashboard from the db
 export const buildLeetcodeDashboardDTO = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -367,8 +349,7 @@ export const buildLeetcodeDashboardDTO = async (userId) => {
     } : null,
   };
 };
-
-/** Build Codeforces-only DTO from DB — no LeetCode data included. */
+// building the codeforces dashboard from the db
 export const buildCodeforcesDashboardDTO = async (userId) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -436,13 +417,7 @@ export const buildCodeforcesDashboardDTO = async (userId) => {
     } : null,
   };
 };
-
-/**
- * Invalidate both platform dashboard caches for a user.
- * Call after any sync that touches either platform.
- *
- * @param {string} userId
- */
+// invalidating the leetcode and codeforces dashboard from the redis
 export const invalidatePlatformDashboardCaches = async (userId) => {
   if (!isRedisReady()) return;
   try {

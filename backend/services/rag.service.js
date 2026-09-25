@@ -8,12 +8,11 @@ import {
   buildFullPrompt,
 } from '../utils/ragPrompt.js';
 
-const RAG_TOP_K = parseInt(process.env.RAG_TOP_K, 10) || 5;
+const RAG_TOP_K    = parseInt(process.env.RAG_TOP_K, 10) || 5;
 const RAG_MIN_SCORE = parseFloat(process.env.RAG_MIN_SCORE) || 0.65;
 
-// Full RAG pipeline: question → embedding → search → context → Gemini → answer + citations.
+// Full pipeline: question → embedding → Pinecone search → context assembly → Gemini → answer
 export const answerQuestion = async ({ userId, question, docIds }) => {
-  // Validate question
   if (!question || typeof question !== 'string' || question.trim().length === 0) {
     const error = new Error('Question must be a non empty string.');
     error.statusCode = 400;
@@ -22,7 +21,7 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
 
   const trimmedQuestion = question.trim();
 
-  // Validate & verify docIds ownership
+  // Verify docId ownership before passing them to Pinecone — prevents cross-user data leakage
   let verifiedDocIds = null;
   if (docIds && Array.isArray(docIds) && docIds.length > 0) {
     const ownedDocs = await prisma.knowledgeDoc.findMany({
@@ -45,7 +44,6 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
     verifiedDocIds = docIds;
   }
 
-  // Retrieve relevant context 
   const results = await retrieveContext({
     userId,
     question: trimmedQuestion,
@@ -53,7 +51,7 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
     topK: RAG_TOP_K,
   });
 
-  // Filter by relevance threshold
+  // Drop chunks below the similarity threshold to reduce noise in the model's context
   const relevantResults = results.filter((r) => r.score >= RAG_MIN_SCORE);
 
   if (relevantResults.length === 0) {
@@ -67,10 +65,7 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
     };
   }
 
-  // Build context
   const contextBlock = buildContext(relevantResults);
-
-  // Generate answer via Gemini
   const answer = await generateAnswer(contextBlock, trimmedQuestion);
 
   return {
@@ -83,25 +78,17 @@ export const answerQuestion = async ({ userId, question, docIds }) => {
   };
 };
 
-// Retrieve relevant context by embedding the query and searching Pinecone.
 export const retrieveContext = async ({ userId, question, docIds, topK }) => {
-  // Generate query embedding
   const queryVector = await embeddingService.embedQuery(question);
 
-  // Search Pinecone with user isolation
-  const results = await vectorService.similaritySearch({
+  return await vectorService.similaritySearch({
     queryVector,
     userId,
     docIds,
     topK,
   });
-
-  return results;
 };
 
-
-// Build formatted context from retrieval results.
-// Delegates to ragPrompt.buildContextBlock with character limit enforcement.
 export const buildContext = (results) => {
   return buildContextBlock(results);
 };
@@ -128,16 +115,14 @@ export const generateAnswer = async (contextBlock, question) => {
   } catch (err) {
     console.error('[RAG] Gemini generation failed:', err.message);
 
-    // Don't expose internal errors
     const error = new Error('Failed to generate answer. The AI service is temporarily unavailable.');
     error.statusCode = 502;
     throw error;
   }
 };
 
-// Create deduplicated citations from retrieval results.
-// Deduplicates by docId + chunkIndex to avoid duplicate citation entries.
-// Each citation includes the source document info and similarity score.
+// Deduplicate citations by docId + chunkIndex so the same chunk
+// doesn't appear twice even if it matched multiple query terms
 export const createCitations = (results) => {
   const seen = new Set();
   const citations = [];
@@ -155,7 +140,7 @@ export const createCitations = (results) => {
       title: metadata.title,
       filename: metadata.filename,
       chunk: metadata.chunkIndex,
-      score: Math.round(score * 1000) / 1000, // Round to 3 decimal places
+      score: Math.round(score * 1000) / 1000,
     });
   }
 

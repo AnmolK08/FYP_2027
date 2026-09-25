@@ -86,7 +86,6 @@ export const updateInterview = async (userId, interviewId, updateData) => {
   return { success: true };
 };
 
-// Static Data Services
 
 const DSA_BANK = [
   { id: 'two-sum', title: 'Two Sum', difficulty: 'Easy', tags: ['Array', 'Hash Table'], url: 'https://leetcode.com/problems/two-sum/' },

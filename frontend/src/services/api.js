@@ -1,7 +1,7 @@
 import { apiClient, API_BASE_URL } from './apiClient';
 
 export const api = {
-  // Auth
+  // ── Auth ──────────────────────────────────────────────────────────────────
   async register(name, email, password, college, department, leetcodeUsername) {
     return apiClient('/auth/register', {
       method: 'POST',
@@ -31,7 +31,7 @@ export const api = {
     });
   },
 
-  // Profile / LeetCode
+  // ── Dashboard ─────────────────────────────────────────────────────────────
   async getDashboard() {
     return apiClient('/dashboard');
   },
@@ -63,7 +63,7 @@ export const api = {
     return apiClient('/leetcode/stats');
   },
 
-  // Codeforces
+  // ── Codeforces ────────────────────────────────────────────────────────────
   async syncCodeforces() {
     return apiClient('/codeforces/sync', { method: 'POST' });
   },
@@ -84,7 +84,7 @@ export const api = {
     return apiClient('/activity/checkin', { method: 'POST' });
   },
 
-  // Leaderboard
+  // ── Leaderboard ───────────────────────────────────────────────────────────
   async getLeaderboard(page = 1, limit = 20, type = 'lucy') {
     return apiClient(`/leaderboard?page=${page}&limit=${limit}&type=${type}`);
   },
@@ -97,7 +97,7 @@ export const api = {
     return apiClient(`/leaderboard/nearby?type=${type}&window=${window}`);
   },
 
-  // Mentor / Chat
+  // ── Mentor / Chat ─────────────────────────────────────────────────────────
   async getChatSessions() {
     return apiClient('/mentor/sessions');
   },
@@ -117,24 +117,23 @@ export const api = {
     return apiClient('/mentor/weakness-plan', { method: 'POST' });
   },
 
-  // Knowledge
+  // ── Knowledge ─────────────────────────────────────────────────────────────
   async getKbDocs() {
     return apiClient('/knowledge/');
   },
 
   async uploadKbDoc(file) {
-    // Extract text content based on file type
     const ext = file.name.split('.').pop().toLowerCase();
     let content;
 
     if (ext === 'docx') {
-      // .docx is a ZIP archive — must use mammoth to extract text
+      // .docx is a ZIP — mammoth extracts the raw text
       const mammoth = await import('mammoth');
       const arrayBuffer = await file.arrayBuffer();
       const result = await mammoth.extractRawText({ arrayBuffer });
       content = result.value;
     } else if (ext === 'pdf') {
-      // PDF binary — must use pdfjs-dist to extract text
+      // pdfjs-dist renders each page's text content into a string
       const pdfjsLib = await import('pdfjs-dist');
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
       const arrayBuffer = await file.arrayBuffer();
@@ -147,7 +146,6 @@ export const api = {
       }
       content = pages.join('\n\n');
     } else {
-      // Plain text files (.txt, .md) — readAsText is fine
       content = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result || '');
@@ -156,7 +154,7 @@ export const api = {
       });
     }
 
-    // Strip null bytes to prevent PostgreSQL errors
+    // PostgreSQL rejects null bytes — strip them before sending
     content = content.replace(/\0/g, '');
 
     return apiClient('/knowledge/upload', {
@@ -181,7 +179,7 @@ export const api = {
     });
   },
 
-  // Mock Interviews
+  // ── Mock Interviews ───────────────────────────────────────────────────────
   async getMockInterviews() {
     return apiClient('/interviews');
   },
@@ -200,7 +198,7 @@ export const api = {
     });
   },
 
-  // Problems
+  // ── Problems ──────────────────────────────────────────────────────────────
   async getProblems(difficulty, tag, q) {
     const params = new URLSearchParams();
     if (difficulty) params.set('difficulty', difficulty);
@@ -209,7 +207,7 @@ export const api = {
     return apiClient(`/problems?${params}`);
   },
 
-  // Resume
+  // ── Resume ────────────────────────────────────────────────────────────────
   async scoreResume(text, targetRole) {
     return apiClient('/resume/score', {
       method: 'POST',
@@ -225,7 +223,7 @@ export const api = {
     return apiClient('/resume/roles');
   },
 
-  // System Design
+  // ── System Design ─────────────────────────────────────────────────────────
   async getSdTopics() {
     return apiClient('/sd/topics');
   },
@@ -234,7 +232,7 @@ export const api = {
     return apiClient('/sd/topics');
   },
 
-  // Predictor
+  // ── Predictor ─────────────────────────────────────────────────────────────
   async predictContest(currentRating, predictedRank, participants) {
     return apiClient('/ai/contest', {
       method: 'POST',
@@ -246,7 +244,7 @@ export const api = {
     });
   },
 
-  // Flashcards
+  // ── Flashcards ────────────────────────────────────────────────────────────
   async getFlashcards(params = {}) {
     const searchParams = new URLSearchParams();
     if (params.documentId) searchParams.set('documentId', params.documentId);
@@ -279,12 +277,12 @@ export const api = {
     });
   },
 
-  // Tracks
+  // ── Tracks ────────────────────────────────────────────────────────────────
   async getTracks() {
     return apiClient('/tracks');
   },
 
-  // Routine & Habit Tracker
+  // ── Routine & Habit Tracker ───────────────────────────────────────────────
   async createRoutine(data) {
     return apiClient('/routines', {
       method: 'POST',

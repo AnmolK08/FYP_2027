@@ -3,13 +3,9 @@ import { tokenStore } from './tokenStore';
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 export const API_BASE_URL = RAW_API_URL.replace(/\/+$/, '');
 
-// Shared in-flight refresh promise to prevent multiple simultaneous refresh requests
+// Single shared promise so concurrent 401s only trigger one refresh round-trip
 let refreshPromise = null;
 
-/**
- * Execute token refresh request against backend.
- * Browser automatically sends HttpOnly refresh cookie.
- */
 async function executeTokenRefresh() {
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -19,7 +15,7 @@ async function executeTokenRefresh() {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Send HttpOnly refresh cookie
+          credentials: 'include', // sends the HttpOnly refresh cookie
         });
 
         if (!response.ok) {
@@ -50,7 +46,6 @@ export async function apiClient(endpoint, options = {}) {
     endpoint.includes('/auth/refresh') ||
     endpoint.includes('/auth/logout');
 
-  // Helper to build request config with current memory token
   const buildConfig = () => {
     const token = tokenStore.getAccessToken();
     const headers = {
@@ -62,7 +57,7 @@ export async function apiClient(endpoint, options = {}) {
     const config = {
       ...options,
       headers,
-      credentials: 'include', // Always send cookies (for refresh cookie & CORS session)
+      credentials: 'include', // always include cookies for refresh + CORS sessions
     };
 
     if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
@@ -76,24 +71,23 @@ export async function apiClient(endpoint, options = {}) {
     return config;
   };
 
-  // If we don't have an access token in memory yet and this isn't an auth endpoint,
-  // attempt a silent refresh first to recover the session seamlessly (e.g. on page refresh).
+  // On page load the in-memory token is gone. Attempt a silent refresh so the
+  // user doesn't have to log in again just because they refreshed the tab.
   if (!tokenStore.hasAccessToken() && !isAuthEndpoint) {
     try {
       await executeTokenRefresh();
     } catch {
-      // If silent refresh fails, proceed to attempt the call which will cleanly 401 if unauthenticated
+      // If silent refresh fails, let the request proceed and 401 cleanly
     }
   }
 
   let config = buildConfig();
   let response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-  // If 401 occurs and this is not a login/register/refresh attempt, try automatic token refresh
+  // On 401, try one token refresh before giving up
   if (response.status === 401 && !isAuthEndpoint) {
     try {
       const newAccessToken = await executeTokenRefresh();
-      // Retry original request with newly obtained access token
       config = buildConfig();
       config.headers.Authorization = `Bearer ${newAccessToken}`;
       response = await fetch(`${API_BASE_URL}${endpoint}`, config);

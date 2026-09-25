@@ -121,7 +121,6 @@ export const checkInUser = async (userId) => {
       checkedIn: true,
     },
   });
-  // Invalidate dashboard cache so activity section is fresh
   await invalidateDashboardCache(userId);
 
   return { success: true };

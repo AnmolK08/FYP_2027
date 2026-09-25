@@ -20,7 +20,9 @@ Rules:
 7. Format your answer nicely. Use paragraphs, bullet points, and new lines to make it easy to read. Do not return a single block of text.
 8. If multiple sources support the answer, cite all of them.`;
 
-// Build the numbered context block from retrieved chunks.
+// Build a numbered context block from retrieved chunks.
+// Numbering lets Gemini refer back to specific source documents in its answer.
+// Hard-caps total characters so large documents don't consume the entire context window.
 export const buildContextBlock = (results) => {
   const blocks = [];
   let totalChars = 0;
@@ -33,9 +35,7 @@ export const buildContextBlock = (results) => {
 
     const block = `${header}\n${content}`;
 
-    // Check if adding this block would exceed the limit
     if (totalChars + block.length > MAX_CONTEXT_CHARS) {
-      // Add a truncated version if we have room for at least the header
       const remaining = MAX_CONTEXT_CHARS - totalChars;
       if (remaining > header.length + 100) {
         blocks.push(`${header}\n${content.slice(0, remaining - header.length - 10)}…`);
@@ -50,7 +50,6 @@ export const buildContextBlock = (results) => {
   return blocks.join('\n\n');
 };
 
-// Assemble the complete user prompt with context and question.
 export const buildFullPrompt = (contextBlock, question) => {
   return `CONTEXT:
 

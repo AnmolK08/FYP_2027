@@ -20,10 +20,9 @@ export const signup = async (req, res, next) => {
       leetcodeUsername: leetcodeUsername || leetcode_handle,
     });
 
-    // Set refresh token in HttpOnly cookie — NEVER expose to JavaScript
+    // Set refresh token in HttpOnly cookie
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, getRefreshTokenCookieOptions());
 
-    // Return only the short-lived access token and sanitized user object
     res.status(201).json({ user, accessToken });
   } catch (error) {
     if (error.statusCode) {
@@ -47,8 +46,6 @@ export const login = async (req, res, next) => {
 
     // Set refresh token in HttpOnly cookie
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, getRefreshTokenCookieOptions());
-
-    // Return only the short-lived access token and sanitized user object
     res.json({ user, accessToken });
   } catch (error) {
     if (error.statusCode) {
@@ -69,13 +66,12 @@ export const refresh = async (req, res, next) => {
       rawRefreshToken
     );
 
-    // Rotate refresh token in HttpOnly cookie
+    // Rotate the refresh token on every use to limit the window for token replay
     res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, getRefreshTokenCookieOptions());
 
-    // Return new access token and user info
     res.json({ accessToken, user });
   } catch (error) {
-    // Clear the invalid cookie if refresh fails
+    // Clear the stale cookie so the client isn't stuck with an invalid token
     res.clearCookie(REFRESH_COOKIE_NAME, {
       ...getRefreshTokenCookieOptions(),
       maxAge: 0,
@@ -90,7 +86,6 @@ export const refresh = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    // Clear the refresh cookie
     res.clearCookie(REFRESH_COOKIE_NAME, {
       ...getRefreshTokenCookieOptions(),
       maxAge: 0,

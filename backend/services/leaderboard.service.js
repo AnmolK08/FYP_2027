@@ -12,7 +12,8 @@ const assertType = (type) => {
   }
 };
 
-
+// Update all three platform ZSETs after a sync. Removes the user from a board
+// when their score is 0 so zero-score users don't sit at the bottom.
 export const updatePlatformScores = async (userId, { leetcodeScore = 0, codeforcesScore = 0, lucyScore = 0 } = {}) => {
   if (!isRedisReady()) return;
 
@@ -28,11 +29,10 @@ export const updatePlatformScores = async (userId, { leetcodeScore = 0, codeforc
         ? redisClient.zAdd(key, { score, value: userId }).catch((err) =>
             console.error(`[Leaderboard] ZADD ${key} failed:`, err.message)
           )
-        : redisClient.zRem(key, userId).catch(() => {}) // silent — member may not exist
+        : redisClient.zRem(key, userId).catch(() => {})
     )
   );
 };
-
 
 export const removeUser = async (userId) => {
   if (!isRedisReady()) return;
@@ -45,13 +45,11 @@ export const removeUser = async (userId) => {
   }
 };
 
-
+// Kept for backward compatibility with the BullMQ worker path which only has universalScore
 export const updateUserScore = async (userId, score) => {
   if (!isRedisReady()) return;
   try {
-    // Keep the old leaderboard:global key in sync for backward compat
     await redisClient.zAdd(leaderboardKey('global'), { score, value: userId });
-    // Also update the lucy board so existing sync paths still feed the new board
     if (score > 0) {
       await redisClient.zAdd(leaderboardKey('lucy'), { score, value: userId });
     }
@@ -60,7 +58,8 @@ export const updateUserScore = async (userId, score) => {
   }
 };
 
-
+// Serves from Redis when available. Auto-rebuilds from PostgreSQL when the
+// ZSET is empty (e.g. after a Redis flush or first boot).
 export const getLeaderboard = async (type = 'lucy', page = 1, limit = 20, requestingUserId = null) => {
   assertType(type);
 
@@ -103,7 +102,6 @@ export const getLeaderboard = async (type = 'lucy', page = 1, limit = 20, reques
   return getLeaderboardFromDatabase(type, page, limit, requestingUserId);
 };
 
-
 export const getUserRank = async (type = 'lucy', userId) => {
   assertType(type);
 
@@ -132,14 +130,12 @@ export const getUserRank = async (type = 'lucy', userId) => {
   return getUserRankFromDatabase(type, userId);
 };
 
-
 export const getNearbyUsers = async (type = 'lucy', userId, window = 2) => {
   assertType(type);
 
-  // ── Redis path ────────────────────────────────────────────────────────────
   if (isRedisReady()) {
     try {
-      const rank0 = await redisClient.zRevRank(leaderboardKey(type), userId); // 0-based
+      const rank0 = await redisClient.zRevRank(leaderboardKey(type), userId);
 
       if (rank0 !== null && rank0 !== undefined) {
         const start  = Math.max(0, rank0 - window);
@@ -171,13 +167,10 @@ export const getNearbyUsers = async (type = 'lucy', userId, window = 2) => {
     }
   }
 
-  // ── DB fallback ───────────────────────────────────────────────────────────
   return getNearbyUsersFromDatabase(type, userId, window);
 };
 
-// ─── Rebuild ──────────────────────────────────────────────────────────────────
-
-// Per-type single-flight guards
+// Single-flight guard prevents duplicate concurrent rebuilds for the same type
 const rebuildInFlight = {};
 
 export const rebuildLeaderboard = async (type) => {
@@ -185,7 +178,7 @@ export const rebuildLeaderboard = async (type) => {
     assertType(type);
     return _rebuildOne(type);
   }
-  // Rebuild all three in parallel
+  // No type specified — rebuild all three in parallel
   const results = await Promise.all(LEADERBOARD_TYPES.map(_rebuildOne));
   return results.reduce((acc, r) => ({ ...acc, ...r }), {});
 };
@@ -207,6 +200,8 @@ const _rebuildOne = async (type) => {
         return { [type]: { rebuilt: 0, error: 'Redis unavailable' } };
       }
 
+      // Write to a temp key, then atomically rename to avoid serving a
+      // half-populated ZSET during the rebuild window
       const tempKey   = `${leaderboardTempKey(type)}:${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const targetKey = leaderboardKey(type);
       const BATCH     = 100;
@@ -230,7 +225,7 @@ const _rebuildOne = async (type) => {
   return rebuildInFlight[type];
 };
 
-/** Pull userId + score pairs from PostgreSQL for a given board type. */
+// PostgreSQL is the source of truth; Redis is populated from here
 const _fetchScoresFromDB = async (type) => {
   if (type === 'leetcode') {
     const rows = await prisma.leetcodeStats.findMany({
@@ -248,15 +243,12 @@ const _fetchScoresFromDB = async (type) => {
     return rows.map((r) => ({ score: r.codeforcesScore, value: r.userId }));
   }
 
-  // lucy
   const rows = await prisma.user.findMany({
     where: { lucyScore: { gt: 0 } },
     select: { id: true, lucyScore: true },
   });
   return rows.map((r) => ({ score: r.lucyScore, value: r.id }));
 };
-
-// ─── DB fallbacks ─────────────────────────────────────────────────────────────
 
 const getLeaderboardFromDatabase = async (type, page, limit, requestingUserId) => {
   const skip = (page - 1) * limit;
@@ -306,7 +298,7 @@ const getLeaderboardFromDatabase = async (type, page, limit, requestingUserId) =
     return { users, page, limit, total, totalPages: Math.ceil(total / limit), type };
   }
 
-  // ── lucy — strictly lucyScore, no universalScore fallback ─────────────────
+  // lucy: no universalScore fallback — strictly lucyScore
   const [entries, total] = await Promise.all([
     prisma.user.findMany({
       where: { lucyScore: { gt: 0 } },
@@ -345,13 +337,11 @@ const getUserRankFromDatabase = async (type, userId) => {
     const above = await prisma.codeforcesStats.count({ where: { codeforcesScore: { gt: s.codeforcesScore } } });
     return { userId, rank: above + 1, score: s.codeforcesScore, type };
   }
-  // lucy — strictly lucyScore
   const s = await prisma.user.findUnique({ where: { id: userId }, select: { lucyScore: true } });
   if (!s || !s.lucyScore) return { userId, rank: null, score: 0, type };
   const above = await prisma.user.count({ where: { lucyScore: { gt: s.lucyScore } } });
   return { userId, rank: above + 1, score: s.lucyScore, type };
 };
-
 
 const getNearbyUsersFromDatabase = async (type, userId, window = 2) => {
   const myRankData = await getUserRankFromDatabase(type, userId);
@@ -392,9 +382,7 @@ const batchFetchProfiles = async (userIds, type) => {
   return new Map(users.map((u) => [u.id, u]));
 };
 
-// ─── Row builder ──────────────────────────────────────────────────────────────
-
-/** Build a normalised leaderboard row regardless of source (Redis or DB). */
+// Normalises a leaderboard row regardless of whether it came from Redis or the DB
 const buildRow = (userId, rank, score, profile, type, requestingUserId) => {
   const lc = profile.leetcodeStats  || {};
   const cf = profile.codeforcesStats || {};
@@ -437,18 +425,15 @@ const buildRow = (userId, rank, score, profile, type, requestingUserId) => {
     };
   }
 
-  // lucy — show both platform numbers
   return {
     ...base,
     lucyScore:         score,
-    // LeetCode side
     lcTotalSolved:     lc.totalSolved   || 0,
     lcEasy:            lc.easy          || 0,
     lcMedium:          lc.medium        || 0,
     lcHard:            lc.hard          || 0,
     lcContestRating:   lc.contestRating || 0,
     leetcodeScore:     lc.leetcodeScore || profile.leetcodeStats?.leetcodeScore || 0,
-    // Codeforces side
     cfHandle:          cf.handle           || null,
     cfTotalSolved:     cf.totalSolved       || 0,
     cfRating:          cf.rating            || 0,

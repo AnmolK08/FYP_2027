@@ -1,8 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// We will import Pages here once we migrate them.
-// For now, importing from legacy paths.
 import LandingPage from '../pages/Landing/LandingPage';
 import LoginPage from '../pages/Login/LoginPage';
 import RegisterPage from '../pages/Register/RegisterPage';
@@ -29,9 +27,6 @@ export default function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<RegisterPage />} />
-      
-      {/* Protected Routes Wrapper could go here, or handled inside individual components. The existing code handles it per route or inside the component itself. */}
-      {/* Example: <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} /> */}
       
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />

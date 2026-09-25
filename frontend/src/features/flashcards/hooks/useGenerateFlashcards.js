@@ -3,9 +3,6 @@ import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
 import { toast } from 'sonner';
 
-/**
- * Mutation hook for generating AI-powered flashcards from a KnowledgeDoc.
- */
 export function useGenerateFlashcards() {
   return useMutation({
     mutationFn: async ({ documentId, count = 10, difficulty = 'mixed' }) => {
@@ -19,7 +16,7 @@ export function useGenerateFlashcards() {
       return { toastId };
     },
     onSuccess: (data, variables, context) => {
-      // Invalidate both general flashcards cache and document-specific query cache
+      // Invalidate both the global list and the document-scoped query
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['flashcards', variables.documentId] });
       const count = data?.count || data?.flashcards?.length || 0;

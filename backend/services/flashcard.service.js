@@ -9,9 +9,6 @@ import {
 const MAX_CONTEXT_CHARS = parseInt(process.env.RAG_MAX_CONTEXT_CHARS, 10) || 8000;
 const VALID_DIFFICULTIES = ['easy', 'medium', 'hard'];
 
-/**
- * Normalizes question string for deduplication comparison.
- */
 const normalizeQuestion = (q) => {
   return (q || '')
     .toLowerCase()
@@ -20,19 +17,15 @@ const normalizeQuestion = (q) => {
     .trim();
 };
 
-/**
- * Helper to safely extract JSON from Gemini text response.
- */
+// Gemini sometimes wraps its JSON in markdown code blocks — strip them before parsing
 const extractJsonFromText = (text) => {
   if (!text || typeof text !== 'string') return null;
 
   let cleaned = text.trim();
-  // Strip Markdown code blocks if present
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
   }
 
-  // Find boundaries of JSON object or array
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -47,10 +40,9 @@ const extractJsonFromText = (text) => {
   }
 };
 
-// Generating the flashcards from the document uploaded by the user in the ragfeature
-// then using them to revise or practice
-// fetching the flashcard from the gemini using the chunks of the document 
-// generating it the batch like if the chunks are more than 8000 characters then generate it in the batch
+// Generates flashcards from a user's uploaded document using Gemini.
+// When the document is large, content is batched across multiple Gemini calls
+// so we don't exceed the context window limit.
 export const generateFlashcardsFromDoc = async ({
   userId,
   documentId,
@@ -100,7 +92,7 @@ export const generateFlashcardsFromDoc = async ({
   let currentBatchLength = 0;
 
   for (const chunk of indexedChunks) {
-    const chunkLength = chunk.text.length + 30; // 30 chars buffer for header
+    const chunkLength = chunk.text.length + 30;
     if (currentBatch.length > 0 && currentBatchLength + chunkLength > MAX_CONTEXT_CHARS) {
       batches.push(currentBatch);
       currentBatch = [chunk];
@@ -181,7 +173,6 @@ export const generateFlashcardsFromDoc = async ({
         err.message
       );
       if (batches.length === 1) {
-        // If single batch failed, bubble up clear AI error
         const error = new Error('AI generation failed: ' + (err.message || 'Gemini service error'));
         error.statusCode = err.statusCode || 502;
         throw error;
@@ -327,8 +318,8 @@ export const deleteFlashcard = async ({ userId, id }) => {
   };
 };
 
-// Architecture hook for future spaced-repetition reviews.
-// Records review interaction with user verification.
+// Placeholder for spaced-repetition scheduling — records the rating but
+// doesn't yet adjust nextReviewAt. Future work.
 export const reviewFlashcard = async ({ userId, id, rating }) => {
   const validRatings = ['again', 'hard', 'good', 'easy'];
   if (!rating || !validRatings.includes(String(rating).toLowerCase())) {

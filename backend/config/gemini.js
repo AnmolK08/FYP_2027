@@ -1,25 +1,20 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 
-// Environment variables
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-const GEMINI_EMBEDDING_MODEL =
-  process.env.GEMINI_EMBEDDING_MODEL;
+const GEMINI_EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL;
 
-// Singleton instances
 let genAI = null;
 let embeddingModel = null;
 let generativeModel = null;
 
 if (GEMINI_API_KEY) {
   try {
-    // Google Generative AI SDK — for chat/generation
     genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     generativeModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
-    // LangChain embedding model — for vector embeddings
-    // gemini-embedding-2 outputs 3072 dims by default, matching Pinecone index.
+    // gemini-embedding-2 outputs 3072 dims by default — must match the Pinecone index dimension
     embeddingModel = new GoogleGenerativeAIEmbeddings({
       model: GEMINI_EMBEDDING_MODEL,
       apiKey: GEMINI_API_KEY,

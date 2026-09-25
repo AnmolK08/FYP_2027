@@ -8,23 +8,8 @@ import {
   postSyncRedisUpdates,
 } from '../services/leetcode.service.js';
 
-/**
- * LeetCode Sync Worker (BullMQ)
- * -----------------------------
- * Processes async sync jobs. Flow:
- *   1. Look up the user's LeetCode username
- *   2. Fetch + parse LeetCode data (reuses service logic)
- *   3. Persist to PostgreSQL (source of truth)
- *   4. Update Redis caches ONLY after PostgreSQL succeeds
- *   5. Release the dedup lock
- */
-
 let syncWorker = null;
 
-/**
- * Start the BullMQ worker.
- * Call after Redis is connected. Runs in the same process as Express.
- */
 export const startSyncWorker = () => {
   const redisUrl = getRedisUrl();
   if (!redisUrl) {
@@ -47,7 +32,6 @@ export const startSyncWorker = () => {
         console.log(`[SyncWorker] Processing sync for user ${userId}`);
 
         try {
-          // 1. Get user's LeetCode username
           const user = await prisma.user.findUnique({
             where: { id: userId },
             select: { leetcodeUsername: true },
@@ -58,21 +42,16 @@ export const startSyncWorker = () => {
             return;
           }
 
-          // 2. Fetch + parse from LeetCode API
           const parsedData = await fetchAndParseLeetcodeData(user.leetcodeUsername);
-
-          // 3. Persist to PostgreSQL (source of truth)
           const stats = await persistLeetcodeData(userId, parsedData);
 
-          // 4. Update Redis caches ONLY after PostgreSQL succeeds
           await postSyncRedisUpdates(userId, stats.universalScore);
 
           console.log(`[SyncWorker] Sync completed for user ${userId} — score: ${stats.universalScore}`);
         } catch (err) {
           console.error(`[SyncWorker] Sync failed for user ${userId}:`, err.message);
-          throw err; // Let BullMQ handle retries
+          throw err;
         } finally {
-          // 5. Release the dedup lock
           if (isRedisReady()) {
             try {
               await redisClient.del(syncLockKey(userId));
@@ -84,7 +63,7 @@ export const startSyncWorker = () => {
       },
       {
         connection,
-        concurrency: 3, // Process up to 3 sync jobs concurrently
+        concurrency: 3,
       }
     );
 
@@ -97,7 +76,6 @@ export const startSyncWorker = () => {
     });
 
     syncWorker.on('error', (err) => {
-      // Suppress noisy connection errors when Redis is offline
       if (err.code === 'ECONNREFUSED' || err.message?.includes('ECONNREFUSED') || err instanceof AggregateError) {
         return;
       }

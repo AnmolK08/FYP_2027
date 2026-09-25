@@ -46,43 +46,37 @@ export const mapSubmissions = (submissions) => {
     };
   }
 
-  const solvedProblems = new Set(); // "contestId_index" dedup key
-  const ratingMap       = new Map(); // problem rating (number) → solved count
-  const tagMap          = new Map(); // tag → solved count (unique problems)
-  const verdictMap      = new Map(); // verdict → total count
-  const languageMap     = new Map(); // language → total count
+  const solvedProblems = new Set(); // dedup key: "contestId_index"
+  const ratingMap       = new Map(); // problem rating → solved count
+  const tagMap          = new Map(); // tag → solved count (unique problems only)
+  const verdictMap      = new Map(); // verdict → total submission count
+  const languageMap     = new Map(); // language → total submission count
 
   for (const sub of submissions) {
     const { verdict, problem, programmingLanguage: lang } = sub;
 
-    // verdictStats — every submission counts
     verdictMap.set(verdict, (verdictMap.get(verdict) || 0) + 1);
 
-    // languageStats — every submission counts
     if (lang) {
       languageMap.set(lang, (languageMap.get(lang) || 0) + 1);
     }
 
-    // Only accepted submissions count toward solved / tags / ratings
     if (verdict !== 'OK') continue;
 
     const problemKey = `${problem.contestId ?? problem.problemsetName ?? 'ps'}_${problem.index}`;
-    if (solvedProblems.has(problemKey)) continue; // already counted
+    if (solvedProblems.has(problemKey)) continue;
 
     solvedProblems.add(problemKey);
 
-    // ratingWiseSolved — only count if the problem has a numeric rating
     if (typeof problem.rating === 'number' && problem.rating > 0) {
       ratingMap.set(problem.rating, (ratingMap.get(problem.rating) || 0) + 1);
     }
 
-    // tagStats
     for (const tag of problem.tags || []) {
       tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
     }
   }
 
-  // ratingWiseSolved sorted ascending by rating
   const ratingWiseSolved = Array.from(ratingMap.entries())
     .sort(([a], [b]) => a - b)
     .map(([rating, count]) => ({ rating, count }));
@@ -99,7 +93,6 @@ export const mapSubmissions = (submissions) => {
     .map(([language, count]) => ({ language, count }))
     .sort((a, b) => b.count - a.count);
 
-  // Recent submissions — lightweight summary (newest first)
   const recentSubmissions = submissions
     .slice(0, MAX_RECENT_SUBMISSIONS)
     .map((sub) => ({
@@ -118,7 +111,7 @@ export const mapSubmissions = (submissions) => {
   return {
     totalSolved:      solvedProblems.size,
     totalSubmissions: submissions.length,
-    contestsAttended: 0,   // overridden by mapRatingHistory
+    contestsAttended: 0, // overridden by mapRatingHistory
     ratingWiseSolved,
     tagStats,
     verdictStats,
@@ -173,7 +166,7 @@ export const buildCodeforcesPayload = (cfUser, submissions, ratingChanges) => {
 
     totalSolved:       subStats.totalSolved,
     totalSubmissions:  subStats.totalSubmissions,
-    // Use ratingHistory length as authoritative contestsAttended when available
+    // ratingHistory length is more accurate than counting from submissions
     contestsAttended:  contestsAttended || subStats.contestsAttended,
 
     ratingHistory,

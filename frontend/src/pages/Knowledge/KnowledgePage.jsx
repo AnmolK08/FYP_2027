@@ -42,7 +42,7 @@ export default function KnowledgePage() {
     try {
       await deleteKbDoc.mutateAsync(id);
     } catch (e) {
-      // Error toast is handled in useDeleteKbDoc hook
+      // toast handled in useDeleteKbDoc
     }
   };
 

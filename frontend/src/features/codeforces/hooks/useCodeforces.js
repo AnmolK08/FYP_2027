@@ -1,39 +1,13 @@
-/**
- * useCodeforces.js
- *
- * TanStack Query hooks for the Codeforces feature.
- * Mirrors the patterns in features/profile/hooks/useUserStats.js.
- *
- * Exports:
- *   useCodeforcesStats  – read stored CF stats for the authenticated user
- *   useSyncCodeforces   – mutation to trigger a CF sync
- */
-
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { queryClient } from '../../../services/queryClient';
 import { syncCodeforces, getCodeforcesStats } from '../api/codeforcesApi';
 
-// ─── Query key factory ────────────────────────────────────────────────────────
-// Centralised so all invalidations target the same key shape.
 export const codeforcesKeys = {
   stats: (userId) => ['codeforces-stats', userId],
 };
 
-// ─── useCodeforcesStats ───────────────────────────────────────────────────────
-
-/**
- * Fetches the stored CodeforcesStats for the authenticated user.
- *
- * Returns:
- *   data.stats  – CodeforcesStats object, or null when never synced
- *   isLoading   – true while the first fetch is in-flight
- *   isError     – true when the request failed (network / auth)
- *   error       – Error object with .message
- *
- * staleTime 2 min — avoids unnecessary refetches on tab focus.
- */
 export function useCodeforcesStats() {
   const { user } = useAuth();
 
@@ -42,26 +16,14 @@ export function useCodeforcesStats() {
     queryFn: async () => {
       if (!user) return null;
       const data = await getCodeforcesStats();
-      return data.stats; // null when never synced — handled in UI
+      return data.stats; // null when never synced — handled in the UI
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
     retry: 1,
   });
 }
 
-// ─── useSyncCodeforces ────────────────────────────────────────────────────────
-
-/**
- * Mutation hook to trigger a Codeforces sync for the authenticated user.
- *
- * On success:  invalidates codeforces-stats and dashboard queries, shows toast.
- * On 400:      "Codeforces username not set" — prompts user to update profile.
- * On 404:      "Handle not found on Codeforces" — handle is invalid.
- * On 409:      "Sync already in progress" — tells user to wait.
- * On 429:      Rate limit from Codeforces.
- * On 502/504:  Codeforces API unreachable.
- */
 export function useSyncCodeforces() {
   const { user } = useAuth();
 
@@ -77,7 +39,6 @@ export function useSyncCodeforces() {
     },
 
     onSuccess: (data, _variables, context) => {
-      // Invalidate all queries that embed CF data
       queryClient.invalidateQueries({ queryKey: codeforcesKeys.stats(user?.id) });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
@@ -87,7 +48,7 @@ export function useSyncCodeforces() {
     },
 
     onError: (err, _variables, context) => {
-      // Provide actionable error messages for common CF-specific failures
+      // Map CF-specific status codes to actionable messages
       let message = err.message || 'Codeforces sync failed. Please try again.';
 
       if (err.status === 400) {

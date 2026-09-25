@@ -1,8 +1,5 @@
 import { toast } from 'sonner';
 
-/**
- * Extracts a readable error string from an error or response object.
- */
 export function extractErrorMessage(error, fallback = 'An unexpected error occurred') {
   if (!error) return fallback;
   if (typeof error === 'string') return error;
@@ -20,9 +17,6 @@ export function extractErrorMessage(error, fallback = 'An unexpected error occur
   return fallback;
 }
 
-/**
- * Extracts a readable success string from a response object or fallback.
- */
 export function extractSuccessMessage(data, fallback = 'Operation completed successfully') {
   if (!data) return fallback;
   if (typeof data === 'string') return data;
@@ -30,19 +24,6 @@ export function extractSuccessMessage(data, fallback = 'Operation completed succ
   return fallback;
 }
 
-/**
- * Tracks a Promise or async operation with three distinct toast states:
- * 1. pending (loading)
- * 2. fulfilled (success)
- * 3. rejected (error)
- *
- * @param {Promise|Function} promiseOrFn - The promise or async function to track.
- * @param {Object} options - Configuration for loading, success, and error messages.
- * @param {string} options.loading - Loading message during pending state.
- * @param {string|Function} options.success - Success message or callback function (data) => string.
- * @param {string|Function} options.error - Error message or callback function (error) => string.
- * @returns {Promise} The original promise result.
- */
 export function toastPromise(promiseOrFn, {
   loading = 'Processing...',
   success = 'Operation successful',
@@ -69,9 +50,6 @@ export function toastPromise(promiseOrFn, {
   });
 }
 
-/**
- * Enhanced notification facade combining sonner primitives with smart message extractors.
- */
 export const notify = {
   loading: (msg, opts) => toast.loading(msg, opts),
   success: (msg, opts) => toast.success(extractSuccessMessage(msg), opts),

@@ -39,8 +39,7 @@ export const createUser = async (userData) => {
 export const updateUser = async (id, updateData) => {
   const { name, college, department, leetcodeUsername, codeforcesUsername, dailyGoal } = updateData;
 
-  // Detect whether codeforcesUsername is actually changing so we can
-  // invalidate the CF stats cache when the handle is updated or cleared.
+  // Check if the CF handle is actually changing before invalidating the cache
   const currentUser = await prisma.user.findUnique({
     where: { id },
     select: { codeforcesUsername: true },
@@ -50,7 +49,6 @@ export const updateUser = async (id, updateData) => {
     codeforcesUsername !== undefined &&
     codeforcesUsername !== (currentUser?.codeforcesUsername ?? null);
 
-  // 1. Update user
   const user = await prisma.user.update({
     where: { id },
     data: {
@@ -76,11 +74,10 @@ export const updateUser = async (id, updateData) => {
     },
   });
 
-  // 2. Invalidate dashboard cache (covers both LeetCode and Codeforces sections)
   await invalidateDashboardCache(id);
 
-  // 3. When the CF handle changes, also invalidate the per-user CF stats cache
-  //    so getCodeforcesStats() doesn't return stale data for the old handle.
+  // Invalidate the CF stats cache when the handle changes so getCodeforcesStats()
+  // doesn't return stale data for the old handle
   if (cfHandleChanged) {
     await invalidateCFCache(id);
   }
@@ -89,13 +86,12 @@ export const updateUser = async (id, updateData) => {
 };
 
 export const deleteUser = async (id) => {
-  await findUserById(id); // Will throw if not found
+  await findUserById(id);
 
   const result = await prisma.user.delete({
     where: { id },
   });
 
-  // Clean up all Redis data for this user
   await invalidateDashboardCache(id);
   await removeUserFromLeaderboard(id);
 
@@ -118,7 +114,6 @@ export const updateLucyUsername = async (userId, newUsername) => {
     throw error;
   }
 
-  // Check uniqueness against other users
   const existing = await prisma.user.findFirst({
     where: {
       lucyUsername: clean,
@@ -133,13 +128,12 @@ export const updateLucyUsername = async (userId, newUsername) => {
     throw error;
   }
 
-  // Fetch old lucyUsername so we can invalidate its Redis mapping
+  // Need the old username to invalidate its Redis mapping
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { lucyUsername: true },
   });
 
-  // Update lucyUsername only (User.id and leetcode accounts remain untouched)
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: { lucyUsername: clean },
@@ -157,7 +151,8 @@ export const updateLucyUsername = async (userId, newUsername) => {
     },
   });
 
-  // Invalidate Redis: old username mapping, new username mapping, and dashboard cache
+  // Invalidate both the old and new username mappings so stale lookups
+  // can't resolve to the wrong user
   if (isRedisReady()) {
     try {
       const keysToDelete = [lucyUsernameKey(clean)];
@@ -184,12 +179,11 @@ export const getPublicProfileByUsername = async (username) => {
   const cleanUsername = String(username).trim().toLowerCase();
   let userId = null;
 
-  // 1. Try Redis cache for lucyUsername → userId mapping
+  // Cache the lucyUsername → userId mapping so profile views don't need a DB read
   if (isRedisReady()) {
     try {
       const cachedUserId = await redisClient.get(lucyUsernameKey(cleanUsername));
       if (cachedUserId) {
-        console.log(`[Profile] Redis HIT for lucyUsername '${cleanUsername}' → userId`);
         userId = cachedUserId;
       }
     } catch (err) {
@@ -197,7 +191,6 @@ export const getPublicProfileByUsername = async (username) => {
     }
   }
 
-  // 2. Cache miss — resolve from DB
   if (!userId) {
     const user = await prisma.user.findFirst({
       where: {
@@ -214,23 +207,20 @@ export const getPublicProfileByUsername = async (username) => {
 
     userId = user.id;
 
-    // Cache the mapping for future requests
     if (isRedisReady()) {
       try {
         await redisClient.set(lucyUsernameKey(cleanUsername), userId, {
           EX: LUCY_USERNAME_TTL,
         });
-        console.log(`[Profile] Cached lucyUsername '${cleanUsername}' → userId in Redis`);
       } catch (err) {
         console.error('[Profile] Redis SET for lucyUsername failed:', err.message);
       }
     }
   }
 
-  // 3. Fetch dashboard data (already Redis-cached via getDashboard)
+  // getDashboard is itself Redis-cached, so public profile views are fast
   const dashboardData = await getDashboard(userId);
 
-  // Mask email for public privacy
   const maskEmail = (email) => {
     if (!email) return null;
     const [name, domain] = email.split('@');
@@ -239,24 +229,13 @@ export const getPublicProfileByUsername = async (username) => {
     return `${maskedName}@${domain}`;
   };
 
-  // Build the public profile response.
-  // Structure:
-  //   { user, stats (LeetCode), codeforces }
-  //
-  // - `stats` is null/zeroed when the user has never synced LeetCode.
-  // - `codeforces` is null when the user has never synced Codeforces.
-  // - Never exposes password, tokens, or private auth information.
   return {
     user: {
       ...dashboardData.user,
       email: maskEmail(dashboardData.user?.email),
-      // Explicitly omit any sensitive fields that might be added to user in future
-      password: undefined,
+      password: undefined, // never expose password hash on public profile
     },
-    // LeetCode section — key name unchanged for backward compatibility
     stats: dashboardData.stats,
-    // Codeforces section — null when not connected
     codeforces: dashboardData.codeforces ?? null,
   };
 };
-

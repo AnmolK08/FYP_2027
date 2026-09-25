@@ -5,9 +5,8 @@ import { useLogout } from './useLogout';
 
 export { useCurrentUser, useLogin, useRegister, useLogout, USER_QUERY_KEY };
 
-/**
- * Unified auth facade hook for backward compatibility and clean feature consumption.
- */
+// Unified facade — wraps the four individual auth hooks so consumers
+// don't need to import and wire them separately
 export function useAuth() {
   const { data: user, isLoading: loading, isFetching, refetch: refreshProfile } = useCurrentUser();
   const loginMutation = useLogin();
@@ -16,7 +15,7 @@ export function useAuth() {
 
   return {
     user: user || null,
-    profile: user || null, // Alias for profile data
+    profile: user || null,
     loading,
     isFetching,
     isAuthenticated: Boolean(user),

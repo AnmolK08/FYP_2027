@@ -29,7 +29,8 @@ export function useLogout() {
     onSettled: () => {
       tokenStore.clearAccessToken();
       queryClient.setQueryData(USER_QUERY_KEY, null);
-      queryClient.clear(); // Clear all cached server state
+      // Clear all cached server state so the next login starts fresh
+      queryClient.clear();
     },
   });
 }

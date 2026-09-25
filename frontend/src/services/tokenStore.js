@@ -1,40 +1,25 @@
-/**
- * In-Memory Access Token Store.
- * The access token is held purely in JavaScript memory and NEVER persisted to localStorage or sessionStorage.
- */
+// Access token lives purely in JS memory — never written to localStorage or sessionStorage.
+// This prevents XSS from being able to read it. The refresh token lives in an HttpOnly cookie.
+
 let accessToken = null;
 const listeners = new Set();
 
 export const tokenStore = {
-  /**
-   * Get the current in-memory access token.
-   */
   getAccessToken: () => accessToken,
 
-  /**
-   * Set or update the access token in memory.
-   */
   setAccessToken: (token) => {
     accessToken = token;
     listeners.forEach((listener) => listener(accessToken));
   },
 
-  /**
-   * Clear the in-memory access token (e.g. on logout or refresh expiration).
-   */
   clearAccessToken: () => {
     accessToken = null;
     listeners.forEach((listener) => listener(null));
   },
 
-  /**
-   * Check if an access token currently exists in memory.
-   */
   hasAccessToken: () => Boolean(accessToken),
 
-  /**
-   * Subscribe to token changes.
-   */
+  // Returns an unsubscribe function
   subscribe: (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);

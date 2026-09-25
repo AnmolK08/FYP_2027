@@ -41,7 +41,7 @@ export const refreshSession = async (rawRefreshToken) => {
     throw error;
   }
 
-  // Verify user still exists in DB
+  // Confirm the user still exists before issuing new tokens
   const user = await prisma.user.findUnique({
     where: { id: decoded.id },
   });
@@ -52,7 +52,6 @@ export const refreshSession = async (rawRefreshToken) => {
     throw error;
   }
 
-  // Issue new access token and rotated refresh token
   const accessToken = generateAccessToken(user);
   const newRefreshToken = generateRefreshToken(user);
 
@@ -78,7 +77,8 @@ export const registerUser = async (userData) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Derive initial lucyUsername from leetcodeUsername or name
+  // Derive a unique lucyUsername from the LeetCode handle or name, with a
+  // numeric suffix loop to guarantee uniqueness without a unique constraint race
   let candidateUsername = normalizeCandidateUsername(leetcodeUsername || name || 'user');
   let suffix = 1;
   while (true) {
@@ -130,6 +130,7 @@ export const loginUser = async (credentials) => {
   });
 
   if (!user) {
+    // Same error message for missing user and wrong password to prevent user enumeration
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
     throw error;

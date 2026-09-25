@@ -36,7 +36,6 @@ export default function GenerateFlashcardsModal({
   const [difficulty, setDifficulty] = useState('mixed');
   const [generationStep, setGenerationStep] = useState(0);
 
-  // Sync documentId whenever the modal opens or docs list updates
   useEffect(() => {
     if (open && docs.length > 0) {
       if (initialDocumentId && docs.some((d) => d.id === initialDocumentId)) {
@@ -47,7 +46,6 @@ export default function GenerateFlashcardsModal({
     }
   }, [open, initialDocumentId, docs]);
 
-  // Loading animation simulation for educational polish
   useEffect(() => {
     let timer;
     if (generateMutation.isPending) {

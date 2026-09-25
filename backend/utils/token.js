@@ -47,8 +47,9 @@ export const getRefreshTokenCookieOptions = () => {
   return {
     httpOnly: true,
     secure: isProduction,
+    // none is required for cross-site cookies (e.g. Vercel frontend → API); lax is safer for same-site
     sameSite: isProduction ? 'none' : 'lax',
     path: '/',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 };

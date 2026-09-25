@@ -3,9 +3,6 @@ import { api } from '../../../services/api';
 import { queryClient } from '../../../services/queryClient';
 import { toast } from 'sonner';
 
-/**
- * Hook to fetch user flashcards, optionally filtered by documentId and difficulty.
- */
 export function useFlashcards(documentId, difficulty) {
   return useQuery({
     queryKey: ['flashcards', documentId || 'all', difficulty || 'all'],
@@ -16,9 +13,6 @@ export function useFlashcards(documentId, difficulty) {
   });
 }
 
-/**
- * Hook to delete a flashcard by ID.
- */
 export function useDeleteFlashcard() {
   return useMutation({
     mutationFn: (id) => api.deleteFlashcard(id),
@@ -40,9 +34,6 @@ export function useDeleteFlashcard() {
   });
 }
 
-/**
- * Hook for spaced-repetition card reviews.
- */
 export function useReviewFlashcard() {
   return useMutation({
     mutationFn: ({ id, rating }) => api.reviewFlashcard(id, rating),
