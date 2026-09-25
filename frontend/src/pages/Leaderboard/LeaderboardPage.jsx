@@ -170,7 +170,7 @@ function LeaderboardTable({ rows, loading, type, compact = false }) {
             <th className="px-5 py-3 w-16">Rank</th>
             <th className="px-5 py-3">Student</th>
             {!compact && <th className="px-5 py-3 hidden md:table-cell">College – Dept</th>}
-            {type !== 'codeforces' && (
+            {type === 'leetcode' && (
               <>
                 <th className="px-5 py-3 text-right">Solved</th>
                 <th className="px-5 py-3 text-right hidden sm:table-cell">E/M/H</th>
@@ -185,7 +185,12 @@ function LeaderboardTable({ rows, loading, type, compact = false }) {
               </>
             )}
             {type === 'lucy' && (
-              <th className="px-5 py-3 text-right hidden sm:table-cell">CF Rating</th>
+              <>
+                <th className="px-5 py-3 text-right hidden sm:table-cell">LC Rating</th>
+                <th className="px-5 py-3 text-right">LC Solved</th>
+                <th className="px-5 py-3 text-right hidden sm:table-cell">CF Rating</th>
+                <th className="px-5 py-3 text-right">CF Solved</th>
+              </>
             )}
             <th className="px-5 py-3 text-right">{scoreLabel[type]}</th>
           </tr>
@@ -244,13 +249,13 @@ function LeaderboardTable({ rows, loading, type, compact = false }) {
 
               {!compact && (
                 <td className="px-5 py-4 hidden md:table-cell">
-                  <div className="text-foreground">{r.college || '–'}</div>
-                  <div className="text-xs text-muted-foreground">{r.department || '–'}</div>
+                  <div className="text-foreground uppercase">{r.college || '–'}</div>
+                  <div className="text-xs text-muted-foreground uppercase">{r.department || '–'}</div>
                 </td>
               )}
 
-              {/* LeetCode / Lucy columns */}
-              {type !== 'codeforces' && (
+              {/* LeetCode columns */}
+              {type === 'leetcode' && (
                 <>
                   <td className="px-5 py-4 text-right font-mono-display font-medium">
                     {r.lcTotalSolved ?? r.totalSolved ?? 0}
@@ -283,11 +288,22 @@ function LeaderboardTable({ rows, loading, type, compact = false }) {
                 </>
               )}
 
-              {/* Lucy: extra CF rating column */}
+              {/* Lucy columns: LC Rating, LC Solved, CF Rating, CF Solved */}
               {type === 'lucy' && (
-                <td className="px-5 py-4 text-right font-mono-display hidden sm:table-cell">
-                  {r.cfRating ?? 0}
-                </td>
+                <>
+                  <td className="px-5 py-4 text-right font-mono-display hidden sm:table-cell">
+                    {Math.round(r.lcContestRating ?? r.contestRating ?? 0)}
+                  </td>
+                  <td className="px-5 py-4 text-right font-mono-display font-medium">
+                    {r.lcTotalSolved ?? r.totalSolved ?? 0}
+                  </td>
+                  <td className="px-5 py-4 text-right font-mono-display hidden sm:table-cell">
+                    {r.cfRating ?? 0}
+                  </td>
+                  <td className="px-5 py-4 text-right font-mono-display font-medium">
+                    {r.cfTotalSolved ?? r.cfSolved ?? 0}
+                  </td>
+                </>
               )}
 
               {/* Score */}
